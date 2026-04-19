@@ -13,30 +13,35 @@ STORY_W, STORY_H = 1080, 1920
 FONT_DIR = Path(__file__).parent / "static" / "fonts"
 
 SAMPLE_REVIEW = {
-    "movie_title": "Fargo",
-    "year": "1996",
-    "rating": 4.5,
-    "backdrop_url": "https://a.ltrbxd.com/resized/sm/upload/ww/kz/nd/19/fargo-1200-1200-675-675-crop-000000.jpg?v=683482948f",
+    "movie_title": "Final Destination Bloodlines",
+    "year": "2025",
+    "rating": 3.5,
+    "backdrop_url": "https://a.ltrbxd.com/resized/sm/upload/d3/mt/jk/i0/2q56lAr8zr43m2soEQe3IXyND9q-1200-1200-675-675-crop-000000.jpg?v=0311a8f340",
     "reviewer_handle": "lennessy",
     "reviewer_avatar_url": None,
     "review_text": (
-        "I'm not sure whether I should watch this, because this movie was only 77% "
-        "fresh on Rotten Tomatoes and I usually go for 78% and above overall a well "
-        "built on a thoughtfully absurd premise, which made up for its underdeveloped "
-        "characters.\n\n"
-        "This may be the only time where you see both Minnesotans being the most violent "
-        "people in the same film? There were lots of Fargo references, but it's obviously "
-        "a very different movie. I don't know, it's thoughtful and convenient to say that "
-        "this is what Fargo would have turned out in today's society. The story, after all, "
-        "was set in the Reagan era, so whatever riches they had would have inevitably led "
-        "to where we are today.\n\n"
-        "Bob Odenkirk plays more or less the same character he did in Nobody. Doesn't "
-        "mean I mean it negatively — him lobbing explosives on crowds of people somehow "
-        "righteously. Lena Headey speaks with a terrific midwestern accent and that terrible "
-        "wig, which oddly worked for her. I just felt like both looks like Cersei. I'm just "
-        "glad they both made it. Carrie Coon is also having fun.\n\n"
-        "Just logged this on letterboxd and got an intimate direct greeting from Bob "
-        "Odenkirk saying he is the 'letterboxd person.' why thank you."
+        "It\u2019s been at least a decade since I last saw a final destination film - this "
+        "was the very franchise that made me swear off horror films for years. And this "
+        "film - campy, self-aware (scream 5 writers i see you) and nostalgic - was the "
+        "perfect venue to confront those old demons again.\n\n"
+        "I watched three of the films in a row when I was 14-ish during Chinese new year "
+        "at my grandparents\u2019 place up on a mountain during a snowstorm. On our way home, "
+        "we had to drive down these steep, winding, and slippery snowy roads. At one point, "
+        "we actually did slip and briefly lost control of the car and the front of the car "
+        "(not the wheels just a bit of the front-right side corner) was actually hanging off "
+        "the ledge. I was so convinced we were going to die that I started writing my own "
+        "posthumous notes on my iPod Touch.\n\n"
+        "I shared this story with the friend I saw this movie with, and he asked me what I "
+        "wrote. What did I want the world to know about me after my untimely death at 14? "
+        "\u00a0It took me a bit to remember, but I was writing a letter to my first ever crush. "
+        "Sadly, I don\u2019t think I was brave enough to tell him I loved him even in death. It "
+        "was a bunch of \u201cIt was great getting to know you in the past year\u201d bullshit. I "
+        "don\u2019t know what I was afraid of.\n\n"
+        "Anyway, back to the movie. Um, solid. I do think you\u2019d enjoy it a lot more if "
+        "you did watch the older movies when you were young and had the unique traumatic "
+        "paranoia inflicted upon you in a memorable fashion, maybe partly in realizing that "
+        "you\u2019ve grown a lot since the last 10+ years and there were things that used to "
+        "scare you that do not any more."
     ),
 }
 
