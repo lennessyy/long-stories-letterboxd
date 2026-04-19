@@ -247,66 +247,90 @@ def generate_story_image(review: dict) -> Image.Image:
 
 
 def scrape_letterboxd(url: str) -> dict:
-    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
-    resp = requests.get(url, headers=headers, timeout=15)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "lxml")
+    import xml.etree.ElementTree as ET
 
-    # Review text
-    review_div = soup.select_one(".body-text")
-    review_text = ""
-    if review_div:
-        paragraphs = review_div.find_all("p")
-        review_text = "\n\n".join(p.get_text() for p in paragraphs)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+    }
 
-    # Movie title + year from og:title ("Review of Movie (Year) by user" or "Movie, Year - ★★★")
-    og_title_tag = soup.select_one("meta[property='og:title']")
-    og_title = og_title_tag["content"] if og_title_tag else ""
-    match = re.search(r"Review of (.+?) \((\d{4})\)", og_title)
-    if match:
-        movie_title, year = match.group(1), match.group(2)
-    else:
-        m2 = re.search(r"^(.+?),\s*(\d{4})", og_title)
-        movie_title = m2.group(1) if m2 else og_title
-        year = m2.group(2) if m2 else ""
+    # Follow redirects to get canonical URL (handles boxd.it short links etc.)
+    canonical = requests.head(url, allow_redirects=True, timeout=10, headers=headers).url
 
-    # Star rating
-    rating = 0.0
-    rating_meta = soup.select_one("meta[name='twitter:data2']")
-    if rating_meta:
-        m = re.search(r"([\d.]+) out of 5", rating_meta.get("content", ""))
-        if m:
-            rating = float(m.group(1))
+    m = re.search(r"letterboxd\.com/([^/]+)/film/([^/]+)", canonical)
+    if not m:
+        raise ValueError(f"Could not parse Letterboxd URL: {url}")
+    username, film_slug = m.group(1), m.group(2)
 
-    # Backdrop
+    # Fetch RSS feed — designed for external consumption, won't get blocked
+    rss = requests.get(f"https://letterboxd.com/{username}/rss/", headers=headers, timeout=15)
+    rss.raise_for_status()
+    root = ET.fromstring(rss.content)
+
+    # Letterboxd RSS namespace
+    LB = "https://letterboxd.com"
+
+    # Find the review entry matching the film slug
+    item = None
+    for candidate in root.findall(".//item"):
+        link = candidate.findtext("link", "")
+        if f"/film/{film_slug}/" in link:
+            item = candidate
+            break
+    if item is None:
+        raise ValueError(f"Review for '{film_slug}' not found in your RSS feed (only recent reviews are included)")
+
+    movie_title = item.findtext(f"{{{LB}}}filmTitle", "")
+    year        = item.findtext(f"{{{LB}}}filmYear", "")
+    rating_str  = item.findtext(f"{{{LB}}}memberRating", "0")
+    rating      = float(rating_str) if rating_str else 0.0
+
+    # Review text lives in <description> as HTML
+    desc_html = item.findtext("description", "")
+    desc_soup = BeautifulSoup(desc_html, "lxml")
+    review_text = "\n\n".join(p.get_text() for p in desc_soup.find_all("p"))
+
+    # Poster from RSS enclosure; also try the film page og:image for a higher-res backdrop
     backdrop_url = None
-    og_image = soup.select_one("meta[property='og:image']")
-    if og_image:
-        backdrop_url = og_image["content"]
+    enclosure = item.find("enclosure")
+    if enclosure is not None:
+        backdrop_url = enclosure.get("url")
 
-    # Reviewer handle from URL
-    reviewer_handle = ""
-    handle_match = re.search(r"letterboxd\.com/([^/]+)/", url)
-    if handle_match:
-        reviewer_handle = handle_match.group(1)
+    # Try film page for a better quality image
+    try:
+        film_page = requests.get(f"https://letterboxd.com/film/{film_slug}/",
+                                 headers=headers, timeout=10)
+        film_soup = BeautifulSoup(film_page.text, "lxml")
+        og_img = film_soup.select_one("meta[property='og:image']")
+        if og_img and og_img.get("content"):
+            backdrop_url = og_img["content"]
+    except Exception:
+        pass
 
-    # Reviewer avatar
+    # Avatar from profile page
     reviewer_avatar_url = None
-    avatar_img = soup.select_one(".avatar img, .person-summary .avatar img")
-    if avatar_img:
-        src = avatar_img.get("src", "")
-        if src.startswith("http"):
-            reviewer_avatar_url = src
+    try:
+        profile = requests.get(f"https://letterboxd.com/{username}/",
+                               headers=headers, timeout=10)
+        profile_soup = BeautifulSoup(profile.text, "lxml")
+        av = profile_soup.select_one(".profile-avatar img, .avatar img")
+        if av and av.get("src", "").startswith("http"):
+            reviewer_avatar_url = av["src"]
+    except Exception:
+        pass
 
     return {
         "movie_title": movie_title,
         "year": year,
         "rating": rating,
         "backdrop_url": backdrop_url,
-        "reviewer_handle": reviewer_handle,
+        "reviewer_handle": username,
         "reviewer_avatar_url": reviewer_avatar_url,
         "review_text": review_text,
     }
+
+
 
 
 @app.route("/")
@@ -342,4 +366,4 @@ def review_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5001)
