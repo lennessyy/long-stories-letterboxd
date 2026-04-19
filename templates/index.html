@@ -17,20 +17,64 @@
       align-items: center;
       padding: 40px 20px;
       gap: 32px;
+      overflow-x: hidden;
+    }
+
+    .film-strip {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+      opacity: 0.04;
+    }
+    .film-strip::before, .film-strip::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      bottom: -20px;
+      width: 48px;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 8px,
+          #fff 8px,
+          #fff 24px,
+          transparent 24px,
+          transparent 32px
+        );
+    }
+    .film-strip::before { left: 12px; }
+    .film-strip::after { right: 12px; }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      font-style: italic;
+      margin-top: -20px;
     }
 
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 600;
       letter-spacing: -0.02em;
       color: #e8e8e8;
+      position: relative;
+      z-index: 1;
     }
+    h1 .accent { color: #ff8800; }
 
     .input-row {
       display: flex;
       gap: 10px;
       width: 100%;
       max-width: 600px;
+      position: relative;
+      z-index: 1;
     }
 
     input[type="url"] {
@@ -44,7 +88,7 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    input[type="url"]:focus { border-color: #00c030; }
+    input[type="url"]:focus { border-color: #ff8800; }
     input[type="url"]::placeholder { color: #555; }
 
     button {
@@ -58,6 +102,8 @@
       padding: 14px 22px;
       transition: background 0.15s;
       white-space: nowrap;
+      position: relative;
+      z-index: 1;
     }
     button:hover { background: #00d936; }
     button:disabled { background: #2a4a2e; color: #555; cursor: default; }
@@ -76,8 +122,21 @@
       font-size: 0.9rem;
       color: #888;
       min-height: 1.2em;
+      position: relative;
+      z-index: 1;
     }
     #status.error { color: #e05555; }
+
+    .loading-quotes {
+      font-style: italic;
+      color: #777;
+      font-size: 0.85rem;
+      animation: fadeQuote 0.5s ease-in;
+    }
+    @keyframes fadeQuote {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
     .preview-wrap {
       display: none;
@@ -85,24 +144,31 @@
       align-items: center;
       gap: 20px;
       width: 100%;
+      position: relative;
+      z-index: 1;
     }
 
     .story-frame {
-      /* Display at ~40% of actual size */
       width: 405px;
       max-width: 100%;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+      animation: slideUp 0.4s ease-out;
     }
     .story-frame img {
       width: 100%;
       display: block;
     }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .action-row {
       display: flex;
       gap: 12px;
+      animation: slideUp 0.4s ease-out 0.1s both;
     }
 
     .share-btn {
@@ -123,10 +189,13 @@
   </style>
 </head>
 <body>
-  <h1>Long Stories for Letterboxd</h1>
+  <div class="film-strip"></div>
+
+  <h1>Long Stories <span class="accent">for Letterboxd</span></h1>
+  <p class="subtitle">Because some reviews deserve more than five stars.</p>
 
   <div class="input-row">
-    <input type="url" id="url-input" placeholder="Paste a Letterboxd review URL…" />
+    <input type="url" id="url-input" placeholder="Paste a Letterboxd review URL..." />
     <button id="generate-btn" onclick="generate()">Generate</button>
   </div>
 
@@ -147,13 +216,39 @@
   </div>
 
   <script>
+    const QUOTES = [
+      "Rewinding the tape...",
+      "Checking the projection booth...",
+      "Consulting the film critics...",
+      "Developing in the darkroom...",
+      "Rolling the credits...",
+      "Adjusting the aspect ratio...",
+      "Finding the director's cut...",
+      "Splicing the reels together...",
+    ];
+
     let currentImageUrl = null;
+    let quoteInterval = null;
+
+    function showLoadingQuote() {
+      const el = document.getElementById("status");
+      let i = Math.floor(Math.random() * QUOTES.length);
+      el.innerHTML = `<span class="loading-quotes">${QUOTES[i]}</span>`;
+      quoteInterval = setInterval(() => {
+        i = (i + 1) % QUOTES.length;
+        el.innerHTML = `<span class="loading-quotes">${QUOTES[i]}</span>`;
+      }, 2500);
+    }
+
+    function stopLoadingQuote() {
+      if (quoteInterval) { clearInterval(quoteInterval); quoteInterval = null; }
+    }
 
     async function generate(url) {
       const input = document.getElementById("url-input");
       const reviewUrl = url || input.value.trim();
       if (!reviewUrl) return;
-      setStatus("Generating…");
+      showLoadingQuote();
       setGenerating(true);
 
       try {
@@ -171,8 +266,10 @@
         currentImageUrl = URL.createObjectURL(blob);
         document.getElementById("story-img").src = currentImageUrl;
         document.getElementById("preview-wrap").style.display = "flex";
+        stopLoadingQuote();
         setStatus("");
       } catch (e) {
+        stopLoadingQuote();
         setStatus(e.message, true);
       } finally {
         setGenerating(false);

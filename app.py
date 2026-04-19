@@ -16,8 +16,8 @@ SAMPLE_REVIEW = {
     "movie_title": "Fargo",
     "year": "1996",
     "rating": 4.5,
-    "backdrop_url": None,
-    "reviewer_handle": "jlennesssy",
+    "backdrop_url": "https://a.ltrbxd.com/resized/sm/upload/ww/kz/nd/19/fargo-1200-1200-675-675-crop-000000.jpg?v=683482948f",
+    "reviewer_handle": "lennessy",
     "reviewer_avatar_url": None,
     "review_text": (
         "I'm not sure whether I should watch this, because this movie was only 77% "
