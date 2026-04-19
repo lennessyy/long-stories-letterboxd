@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Long Stories for Letterboxd</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0f;
+      color: #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 32px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #e8e8e8;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    input[type="url"] {
+      flex: 1;
+      background: #1a1a1f;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="url"]:focus { border-color: #00c030; }
+    input[type="url"]::placeholder { color: #555; }
+
+    button {
+      background: #00c030;
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 14px 22px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    button:hover { background: #00d936; }
+    button:disabled { background: #2a4a2e; color: #555; cursor: default; }
+
+    .sample-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #888;
+      font-size: 0.85rem;
+      font-weight: 400;
+      padding: 10px 16px;
+    }
+    .sample-btn:hover { border-color: #555; color: #bbb; background: transparent; }
+
+    #status {
+      font-size: 0.9rem;
+      color: #888;
+      min-height: 1.2em;
+    }
+    #status.error { color: #e05555; }
+
+    .preview-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .story-frame {
+      /* Display at ~40% of actual size */
+      width: 405px;
+      max-width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+    .story-frame img {
+      width: 100%;
+      display: block;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .share-btn {
+      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+      color: #fff;
+      font-size: 1rem;
+      padding: 14px 28px;
+    }
+    .share-btn:hover { opacity: 0.9; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+
+    .download-btn {
+      background: #1a1a1f;
+      border: 1px solid #333;
+      color: #ccc;
+      font-size: 0.95rem;
+    }
+    .download-btn:hover { background: #222; border-color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Long Stories for Letterboxd</h1>
+
+  <div class="input-row">
+    <input type="url" id="url-input" placeholder="Paste a Letterboxd review URL…" />
+    <button id="generate-btn" onclick="generate()">Generate</button>
+  </div>
+
+  <div class="input-row" style="justify-content:center">
+    <button class="sample-btn" onclick="generateSample()">Try with sample review</button>
+  </div>
+
+  <div id="status"></div>
+
+  <div class="preview-wrap" id="preview-wrap">
+    <div class="story-frame">
+      <img id="story-img" src="" alt="Generated story" />
+    </div>
+    <div class="action-row">
+      <button class="share-btn" onclick="shareToInstagram()">Share to Instagram Stories</button>
+      <button class="download-btn" onclick="downloadImage()">Download</button>
+    </div>
+  </div>
+
+  <script>
+    let currentImageUrl = null;
+
+    async function generate(url) {
+      const input = document.getElementById("url-input");
+      const reviewUrl = url || input.value.trim();
+      if (!reviewUrl) return;
+      setStatus("Generating…");
+      setGenerating(true);
+
+      try {
+        const resp = await fetch("/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: reviewUrl }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.error || "Failed to generate");
+        }
+        const blob = await resp.blob();
+        if (currentImageUrl) URL.revokeObjectURL(currentImageUrl);
+        currentImageUrl = URL.createObjectURL(blob);
+        document.getElementById("story-img").src = currentImageUrl;
+        document.getElementById("preview-wrap").style.display = "flex";
+        setStatus("");
+      } catch (e) {
+        setStatus(e.message, true);
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    function generateSample() {
+      generate("__sample__");
+    }
+
+    function setStatus(msg, isError = false) {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      el.className = isError ? "error" : "";
+    }
+
+    function setGenerating(on) {
+      document.getElementById("generate-btn").disabled = on;
+    }
+
+    async function shareToInstagram() {
+      if (!currentImageUrl) return;
+      const blob = await fetch(currentImageUrl).then(r => r.blob());
+      const file = new File([blob], "story.jpg", { type: "image/jpeg" });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "My Letterboxd review" });
+        } catch (e) {
+          if (e.name !== "AbortError") alert("Share failed: " + e.message);
+        }
+      } else {
+        alert("Web Share not supported on this browser. Use Download and share manually.");
+      }
+    }
+
+    function downloadImage() {
+      if (!currentImageUrl) return;
+      const a = document.createElement("a");
+      a.href = currentImageUrl;
+      a.download = "letterboxd-story.jpg";
+      a.click();
+    }
+
+    document.getElementById("url-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") generate();
+    });
+  </script>
+</body>
+</html>
