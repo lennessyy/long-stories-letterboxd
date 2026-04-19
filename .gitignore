@@ -4,3 +4,6 @@ __pycache__/
 *.jpg
 *.png
 instance/
+cert.pem
+key.pem
+rootCA.pem

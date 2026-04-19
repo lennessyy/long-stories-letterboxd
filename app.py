@@ -366,4 +366,11 @@ def review_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5001)
+    import os
+    port = int(os.environ.get("PORT", 5001))
+    ssl_ctx = None
+    if os.path.exists("cert.pem") and os.path.exists("key.pem"):
+        import ssl
+        ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_ctx.load_cert_chain("cert.pem", "key.pem")
+    app.run(debug=False, host="0.0.0.0", port=port, ssl_context=ssl_ctx)
