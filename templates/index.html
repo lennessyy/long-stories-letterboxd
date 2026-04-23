@@ -162,11 +162,23 @@ function Carousel({ review, onBack }) {
     touch.current = null;
   };
 
+  async function capture(format) {
+    const node = refs.current[idx];
+    const prev = node.style.transform;
+    node.style.transform = "none";
+    try {
+      const opts = { width: STORY_W, height: STORY_H, pixelRatio: 1, cacheBust: true };
+      if (format === "blob") return await htmlToImage.toBlob(node, opts);
+      return await htmlToImage.toPng(node, opts);
+    } finally {
+      node.style.transform = prev;
+    }
+  }
+
   async function download() {
     setSaving(true);
     try {
-      const node = refs.current[idx];
-      const dataUrl = await htmlToImage.toPng(node, { width: STORY_W, height: STORY_H, pixelRatio: 1, cacheBust: true });
+      const dataUrl = await capture("png");
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = `${review.title}-${templates[idx].id}.png`;
@@ -178,8 +190,7 @@ function Carousel({ review, onBack }) {
   async function share() {
     setSaving(true);
     try {
-      const node = refs.current[idx];
-      const blob = await htmlToImage.toBlob(node, { width: STORY_W, height: STORY_H, pixelRatio: 1, cacheBust: true });
+      const blob = await capture("blob");
       const file = new File([blob], "story.png", { type: "image/png" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
