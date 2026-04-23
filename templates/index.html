@@ -177,35 +177,22 @@ function Carousel({ review, onBack }) {
     }
   }
 
-  async function download() {
-    setSaving(true);
-    try {
-      const dataUrl = await capture("png");
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `${review.title}-${templates[idx].id}.png`;
-      a.click();
-    } catch (e) { alert("Save failed: " + e.message); }
-    setSaving(false);
-  }
-
-  async function share() {
+  async function save() {
     setSaving(true);
     try {
       const blob = await capture("blob");
-      const file = new File([blob], "story.png", { type: "image/png" });
+      const file = new File([blob], `${review.title}-${templates[idx].id}.png`, { type: "image/png" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
       } else {
-        // fallback to download
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${review.title}.png`;
+        a.download = file.name;
         a.click();
       }
     } catch (e) {
       if (e.name !== "AbortError") {
-        alert("Share failed: " + e.message);
+        alert("Save failed: " + e.message);
       }
     }
     setSaving(false);
@@ -261,15 +248,10 @@ function Carousel({ review, onBack }) {
         ))}
       </div>
 
-      <div style={{ padding: "4px 20px 12px", display: "flex", gap: 10, maxWidth: 480, margin: "0 auto", width: "100%" }}>
-        <button onClick={download} disabled={saving} style={{ flex: 1, height: 44, borderRadius: 12,
-          background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-          {saving ? "Saving…" : "Download PNG"}
-        </button>
-        <button onClick={share} disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12,
-          background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)", border: "none", color: "#fff",
-          fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-          Share to Instagram
+      <div style={{ padding: "4px 20px 12px", maxWidth: 480, margin: "0 auto", width: "100%" }}>
+        <button onClick={save} disabled={saving} style={{ width: "100%", height: 44, borderRadius: 12,
+          background: "#00c030", border: "none", color: "#000", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          {saving ? "Saving…" : "Save Image"}
         </button>
       </div>
     </div>
