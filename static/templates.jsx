@@ -139,12 +139,13 @@ function ShortPosterHero({ review }) {
 
   return (
     <StoryFrame bg="#0d0d0f">
-      {/* Blurred backdrop — large overflow + heavy blur hides image edges */}
+      {/* Blurred backdrop — scale up to hide image edges within overflow:hidden */}
       <div style={{
-        position: "absolute", top: -100, left: -100, right: -100, bottom: -100,
+        position: "absolute", inset: 0,
         backgroundImage: `url(${review.backdrop || review.poster})`,
         backgroundSize: "cover", backgroundPosition: "center",
         filter: "blur(80px) brightness(0.65) saturate(1.3)",
+        transform: "scale(1.5)",
       }} />
       {/* Color wash from accent */}
       <div style={{
@@ -222,10 +223,11 @@ function ShortTicketStub({ review }) {
       }} />
       {/* Subtle blurred poster for color context */}
       <div style={{
-        position: "absolute", top: -100, left: -100, right: -100, bottom: -100,
+        position: "absolute", inset: 0,
         backgroundImage: `url(${review.backdrop || review.poster})`,
         backgroundSize: "cover", backgroundPosition: "center",
         filter: "blur(100px) brightness(0.5) saturate(1.6)",
+        transform: "scale(1.5)",
         opacity: 0.4,
         mixBlendMode: "screen",
       }} />
