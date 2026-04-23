@@ -167,9 +167,11 @@ function Carousel({ review, onBack }) {
     const prev = node.style.transform;
     node.style.transform = "none";
     try {
-      const opts = { width: STORY_W, height: STORY_H, pixelRatio: 1, cacheBust: true };
-      if (format === "blob") return await htmlToImage.toBlob(node, opts);
-      return await htmlToImage.toPng(node, opts);
+      const opts = { width: STORY_W, height: STORY_H, pixelRatio: 1 };
+      // Run twice — first pass warms image fetches, second renders correctly
+      const fn = format === "blob" ? htmlToImage.toBlob : htmlToImage.toPng;
+      await fn(node, opts);
+      return await fn(node, opts);
     } finally {
       node.style.transform = prev;
     }
