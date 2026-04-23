@@ -250,7 +250,7 @@ function ShortTicketStub({ review }) {
           display: "flex", flexDirection: "column",
           fontFamily: "'Inter', sans-serif",
           boxShadow: "0 40px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(0,0,0,0.1)",
-          position: "relative",
+          position: "relative", overflow: "hidden",
         }}>
           {/* Perforation dots on sides */}
           <div style={{ position: "absolute", left: -10, top: "52%", bottom: 0, width: 20 }}>
@@ -265,9 +265,9 @@ function ShortTicketStub({ review }) {
           </div>
 
           {/* Top part - poster hero */}
-          <div style={{ padding: "52px 64px 36px", borderBottom: "3px dashed #1a0f0a", display: "flex", gap: 40, alignItems: "center" }}>
+          <div style={{ padding: "52px 64px 36px", borderBottom: "3px dashed #1a0f0a", display: "flex", gap: 40, alignItems: "center", overflow: "hidden" }}>
             <img src={review.poster} style={{
-              width: 220, height: 330, objectFit: "cover",
+              width: 220, height: 330, objectFit: "cover", flexShrink: 0,
               boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }} />
             <div style={{ flex: 1 }}>
