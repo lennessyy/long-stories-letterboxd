@@ -221,15 +221,10 @@ function ShortTicketStub({ review }) {
         position: "absolute", inset: 0,
         background: "radial-gradient(ellipse at top, #4a2616 0%, #2a130a 45%, #140806 100%)",
       }} />
-      {/* Subtle blurred poster for color context */}
+      {/* Color wash from poster — rendered as a tiny hidden img to extract palette feel */}
       <div style={{
         position: "absolute", inset: 0,
-        backgroundImage: `url(${review.backdrop || review.poster})`,
-        backgroundSize: "cover", backgroundPosition: "center",
-        filter: "blur(100px) brightness(0.5) saturate(1.6)",
-        transform: "scale(1.5)",
-        opacity: 0.4,
-        mixBlendMode: "screen",
+        background: "radial-gradient(ellipse at 50% 30%, rgba(180,100,60,0.25) 0%, transparent 70%)",
       }} />
       {/* Warm spotlight from above */}
       <div style={{
