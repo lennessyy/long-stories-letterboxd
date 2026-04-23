@@ -186,7 +186,7 @@ function Carousel({ review, onBack }) {
       }
     } catch (e) {
       if (e.name !== "AbortError") {
-        alert("Sharing requires HTTPS. Use Download instead, or access this site over HTTPS.");
+        alert("Share failed: " + e.message);
       }
     }
     setSaving(false);
