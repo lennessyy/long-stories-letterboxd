@@ -133,17 +133,20 @@ function StoryFrame({ children, bg = "#0d0d0f", style }) {
 // ── SHORT 1: Poster hero with floating glass card ─────────────
 // Refined version of user's reference image
 function ShortPosterHero({ review }) {
+  const len = review.review.length;
+  const reviewSize = len < 100 ? 48 : len < 200 ? 40 : 32;
+  const titleSize = len < 100 ? 84 : 72;
+
   return (
     <StoryFrame bg="#0d0d0f">
-      {/* Blurred backdrop */}
+      {/* Blurred backdrop — inset -20px to avoid edge gaps */}
       <div style={{
-        position: "absolute", inset: 0,
+        position: "absolute", top: -20, left: -20, right: -20, bottom: -20,
         backgroundImage: `url(${review.backdrop || review.poster})`,
         backgroundSize: "cover", backgroundPosition: "center",
         filter: "blur(40px) brightness(0.65) saturate(1.3)",
-        transform: "scale(1.15)",
       }} />
-      {/* Color wash from accent — gives warmth instead of flat black */}
+      {/* Color wash from accent */}
       <div style={{
         position: "absolute", inset: 0,
         background: `radial-gradient(ellipse at 30% 20%, ${review.accent}33 0%, transparent 55%),
@@ -155,7 +158,7 @@ function ShortPosterHero({ review }) {
         position: "absolute", inset: 0, opacity: 0.18, mixBlendMode: "overlay",
         backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
       }} />
-      {/* Subtle vignette */}
+      {/* Vignette */}
       <div style={{
         position: "absolute", inset: 0,
         background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)",
@@ -166,29 +169,30 @@ function ShortPosterHero({ review }) {
       }} />
 
       {/* Content */}
-      <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "120px 80px 100px" }}>
+      <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 80px 100px", gap: 32 }}>
         {/* Poster */}
         <img src={review.poster} style={{
           width: 380, height: 570, objectFit: "cover", borderRadius: 12,
           boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",
-          marginBottom: 48,
         }} />
 
         {/* Title + stars */}
-        <h1 style={{
-          fontSize: 72, fontWeight: 700, letterSpacing: -1.5,
-          textAlign: "center", margin: 0, lineHeight: 1.05,
-        }}>
-          {review.title}
-          <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
-        </h1>
-        <div style={{ marginTop: 16, marginBottom: 28 }}>
-          <StarRow rating={review.rating} color={review.accent} size={56} />
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{
+            fontSize: titleSize, fontWeight: 700, letterSpacing: -1.5,
+            textAlign: "center", margin: 0, lineHeight: 1.05,
+          }}>
+            {review.title}
+            <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
+          </h1>
+          <div style={{ marginTop: 16 }}>
+            <StarRow rating={review.rating} color={review.accent} size={56} />
+          </div>
         </div>
 
         {/* Review text */}
         <p style={{
-          fontSize: 30, lineHeight: 1.45, textAlign: "center",
+          fontSize: reviewSize, lineHeight: 1.45, textAlign: "center",
           color: "rgba(255,255,255,0.93)", maxWidth: 820, margin: 0,
           fontWeight: 300, letterSpacing: 0.1,
         }}>
@@ -206,6 +210,9 @@ function ShortPosterHero({ review }) {
 
 // ── SHORT 2: Ticket stub ──────────────────────────────────────
 function ShortTicketStub({ review }) {
+  const len = review.review.length;
+  const reviewSize = len < 100 ? 38 : len < 200 ? 32 : 26;
+
   return (
     <StoryFrame bg="#1a0f0a">
       {/* Warm cinema-curtain gradient backdrop */}
@@ -291,7 +298,7 @@ function ShortTicketStub({ review }) {
               ── The Review ──
             </div>
             <p style={{
-              fontSize: 26, lineHeight: 1.45, margin: 0,
+              fontSize: reviewSize, lineHeight: 1.45, margin: 0,
               fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
               fontWeight: 400,
             }}>
@@ -314,6 +321,9 @@ function ShortTicketStub({ review }) {
 
 // ── SHORT 3: Full-bleed poster with type overlay ──────────────
 function ShortFullBleed({ review }) {
+  const len = review.review.length;
+  const reviewSize = len < 100 ? 48 : len < 200 ? 40 : 32;
+
   return (
     <StoryFrame>
       {/* Full bleed poster */}
@@ -366,7 +376,7 @@ function ShortFullBleed({ review }) {
         }} />
 
         <p style={{
-          fontSize: 32, lineHeight: 1.4, margin: 0,
+          fontSize: reviewSize, lineHeight: 1.4, margin: 0,
           color: "rgba(255,255,255,0.92)",
           fontWeight: 300, letterSpacing: 0.2,
           maxWidth: 900,
