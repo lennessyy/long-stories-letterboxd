@@ -139,12 +139,12 @@ function ShortPosterHero({ review }) {
 
   return (
     <StoryFrame bg="#0d0d0f">
-      {/* Blurred backdrop — inset -20px to avoid edge gaps */}
+      {/* Blurred backdrop — large overflow + heavy blur hides image edges */}
       <div style={{
-        position: "absolute", top: -20, left: -20, right: -20, bottom: -20,
+        position: "absolute", top: -100, left: -100, right: -100, bottom: -100,
         backgroundImage: `url(${review.backdrop || review.poster})`,
         backgroundSize: "cover", backgroundPosition: "center",
-        filter: "blur(40px) brightness(0.65) saturate(1.3)",
+        filter: "blur(80px) brightness(0.65) saturate(1.3)",
       }} />
       {/* Color wash from accent */}
       <div style={{
