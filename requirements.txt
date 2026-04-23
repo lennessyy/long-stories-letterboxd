@@ -1,5 +1,4 @@
 flask
-pillow
+feedparser
 requests
 beautifulsoup4
-lxml
