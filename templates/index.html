@@ -72,16 +72,22 @@ const TAGLINES = [
 ];
 const tagline = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
 
+function proxyImg(url) {
+  if (!url) return url;
+  return "/image-proxy?url=" + encodeURIComponent(url);
+}
+
 // Adapter: convert app.py review shape → template shape
 function adapt(r) {
+  const img = proxyImg(r.backdrop_url);
   return {
     id: r.movie_title + r.year,
     title: r.movie_title,
     year: r.year,
     rating: Number(r.rating) || 0,
     review: r.review_text || "",
-    poster: r.backdrop_url,
-    backdrop: r.backdrop_url,
+    poster: img,
+    backdrop: img,
     accent: "#ff8000",
     reviewer: r.reviewer_handle,
   };

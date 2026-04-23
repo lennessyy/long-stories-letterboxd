@@ -163,6 +163,21 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/image-proxy")
+def image_proxy():
+    """Proxy external images to avoid CORS tainting the canvas."""
+    img_url = request.args.get("url", "")
+    if not img_url or "letterboxd" not in img_url and "ltrbxd" not in img_url:
+        return "Forbidden", 403
+    try:
+        resp = requests.get(img_url, headers=UA, timeout=10)
+        resp.raise_for_status()
+        content_type = resp.headers.get("Content-Type", "image/jpeg")
+        return resp.content, 200, {"Content-Type": content_type, "Cache-Control": "public, max-age=86400"}
+    except Exception:
+        return "Image fetch failed", 502
+
+
 @app.route("/review-data", methods=["POST"])
 def review_data():
     url = (request.get_json(silent=True) or {}).get("url", "").strip()
