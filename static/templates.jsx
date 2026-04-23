@@ -222,10 +222,10 @@ function ShortTicketStub({ review }) {
       }} />
       {/* Subtle blurred poster for color context */}
       <div style={{
-        position: "absolute", inset: 0,
+        position: "absolute", top: -100, left: -100, right: -100, bottom: -100,
         backgroundImage: `url(${review.backdrop || review.poster})`,
         backgroundSize: "cover", backgroundPosition: "center",
-        filter: "blur(80px) brightness(0.5) saturate(1.6)",
+        filter: "blur(100px) brightness(0.5) saturate(1.6)",
         opacity: 0.4,
         mixBlendMode: "screen",
       }} />
