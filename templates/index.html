@@ -103,7 +103,7 @@ function Landing({ onGenerate, loading, error }) {
       <p style={{ opacity: 0.4, fontStyle: "italic", fontSize: 14 }}>{tagline}</p>
       <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 520 }}>
         <input value={url} onChange={e => setUrl(e.target.value)}
-          placeholder="https://letterboxd.com/yourname/film/..."
+          placeholder="Review URL here"
           onKeyDown={e => e.key === "Enter" && url && onGenerate(url)}
           style={{ flex: 1, background: "#1a1a1f", border: "1px solid #333", borderRadius: 10, color: "#fff", fontSize: 15, padding: "14px 16px", outline: "none" }} />
         <button disabled={!url || loading} onClick={() => onGenerate(url)}
