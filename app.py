@@ -107,24 +107,33 @@ def scrape_from_page(url: str, user: str, film_slug: str) -> dict:
         if m:
             rating = int(m.group(1)) / 2.0
 
-    # Title + year from the film header or og:title
+    # Title + year: try the film slug as a last resort, but prefer page elements
     movie_title = ""
     year = ""
-    film_link = soup.select_one("h1.film-title a, .film-title-wrapper a")
+    # Letterboxd review pages embed the film title in several places
+    film_link = soup.select_one(".film-title-wrapper a, h1.film-title a, .headline-2 a[href*='/film/']")
     if film_link:
         movie_title = film_link.get_text(strip=True)
-    year_el = soup.select_one(".film-title-wrapper small a, h1.film-title small")
+    year_el = soup.select_one(".film-title-wrapper small a, h1.film-title small, .metadata .film-title-wrapper small")
     if year_el:
         year = year_el.get_text(strip=True)
 
+    # Fallback: og:title is often "A ★★★★ review of Title (YYYY)"
     if not movie_title:
         og_title = soup.find("meta", property="og:title")
         if og_title and og_title.get("content"):
             raw = og_title["content"]
-            m = re.match(r"(.+?)(?:\s*\((\d{4})\))?(?:\s*[-–].*)?$", raw)
+            # "A ★★★★ review of Movie Title (2025)" or "Movie Title (2025) — ..."
+            m = re.search(r"review of (.+?)(?:\s*\((\d{4})\))?\s*$", raw)
+            if not m:
+                m = re.match(r"(.+?)(?:\s*\((\d{4})\))?(?:\s*[-–].*)?$", raw)
             if m:
                 movie_title = m.group(1).strip()
                 year = year or (m.group(2) or "")
+
+    # Last resort: humanize the film slug
+    if not movie_title:
+        movie_title = film_slug.replace("-", " ").title()
 
     return {
         "movie_title": movie_title,
