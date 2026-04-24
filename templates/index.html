@@ -114,6 +114,16 @@ function Landing({ onGenerate, loading, error }) {
           {loading ? "Loading…" : "Generate"}
         </button>
       </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button disabled={loading} onClick={() => onGenerate("__sample_long__")}
+          style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, color: "#888", fontSize: 13, padding: "10px 16px", cursor: "pointer" }}>
+          Try long review
+        </button>
+        <button disabled={loading} onClick={() => onGenerate("__sample_short__")}
+          style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, color: "#888", fontSize: 13, padding: "10px 16px", cursor: "pointer" }}>
+          Try short review
+        </button>
+      </div>
       {error && <div style={{ color: "#e05555", fontSize: 14 }}>{error}</div>}
       <div style={{ position: "absolute", bottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
         <span style={{ fontSize: 11, color: "#555", letterSpacing: 0.3 }}>follow me</span>

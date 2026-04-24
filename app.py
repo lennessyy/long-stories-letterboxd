@@ -167,6 +167,55 @@ def scrape_letterboxd(url: str) -> dict:
     return result
 
 
+SAMPLES = {
+    "__sample_long__": {
+        "movie_title": "Her Story",
+        "year": "2024",
+        "rating": 5.0,
+        "review_text": (
+            "loved, loved, loved this movie. It’s delicate, daring, delightfully "
+            "poignant, and hysterically hilarious. i spent much of the runtime in "
+            "tears both from laughing and sobbing. i genuinely don’t remember the "
+            "last time i was laughing this hard during a movie at things that make "
+            "my heart feel so full at the same time. \n\n"
+            "simply in terms of ideas, nothing here is particularly new or "
+            "revolutionary, but the director’s indefatigable wit makes everything "
+            "go down so much more smoothly. everyone in my theater died at “how "
+            "many Chizuko Ueno books have you read”? \n\n"
+            "being a single mom is hard. not being able to write about vacations "
+            "abroad when everyone in your class does is hard. living in censorship "
+            "when your dream is to be an investigative journalist is hard. falling "
+            "in love with someone who won’t love you back is hard. everyone "
+            "stumbles and grow in this story. life is not what they want it to be, "
+            "but they manage to reconcile without losing who they are or giving up "
+            "things that bring them joy. \n\n"
+            "do you stop being a child when you realize not all your dreams will "
+            "come true, no matter how hard you try? if so, can you ever rediscover "
+            "that childlike wonder again? shao yihui does not tell you to be "
+            "optimistic, but she wants you to be brave. at the end of the day "
+            "that’s the best anyone can do."
+        ),
+        "backdrop_url": "https://a.ltrbxd.com/resized/sm/upload/d0/sm/45/zb/her%20story%202-1200-1200-675-675-crop-000000.jpg?v=a2952f384d",
+        "reviewer_handle": "lennessy",
+    },
+    "__sample_short__": {
+        "movie_title": "Gladiator II",
+        "year": "2024",
+        "rating": 2.0,
+        "review_text": (
+            "paul mescal’s character changes his entire personality after every "
+            "fight. no character really stood out to me in this movie at all and "
+            "the plot is so flat. i don’t really know why this movie needed to "
+            "exist. paul mescal is hot yeah, but all you get to see is his arm "
+            "and chest. i feel like there should at least be some ass. anyway, "
+            "cannot say i enjoyed this viewing experience. also it was way too long."
+        ),
+        "backdrop_url": "https://a.ltrbxd.com/resized/sm/upload/85/h2/uy/p3/gladiator%202-1200-1200-675-675-crop-000000.jpg?v=35462ea2c8",
+        "reviewer_handle": "lennessy",
+    },
+}
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -192,6 +241,8 @@ def review_data():
     url = (request.get_json(silent=True) or {}).get("url", "").strip()
     if not url:
         return jsonify({"error": "Missing url"}), 400
+    if url in SAMPLES:
+        return jsonify(SAMPLES[url])
     try:
         return jsonify(scrape_letterboxd(url))
     except ValueError as e:
