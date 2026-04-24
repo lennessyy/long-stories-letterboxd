@@ -101,9 +101,6 @@ function Landing({ onGenerate, loading, error }) {
         Long Stories <span style={{ color: "#ff8800" }}>for Letterboxd</span>
       </h1>
       <p style={{ opacity: 0.4, fontStyle: "italic", fontSize: 14 }}>{tagline}</p>
-      <p style={{ opacity: 0.6, maxWidth: 420, textAlign: "center", lineHeight: 1.5 }}>
-        Paste a review URL. We'll generate three story designs you can swipe between.
-      </p>
       <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 520 }}>
         <input value={url} onChange={e => setUrl(e.target.value)}
           placeholder="https://letterboxd.com/yourname/film/..."
