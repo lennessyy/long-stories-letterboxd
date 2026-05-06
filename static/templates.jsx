@@ -7,6 +7,8 @@
 
 const STORY_W = 1080;
 const STORY_H = 1920;
+const LONG_TOP_SAFE = 150;
+const LONG_RIGHT_POSTER_LIFT = 44;
 
 // Render star rating as text: ★★★½
 window.starString = function (rating) {
@@ -410,13 +412,13 @@ function LongEditorial({ review }) {
 
       <div style={{
         position: "relative", height: "100%",
-        padding: "80px 90px", display: "flex", flexDirection: "column",
+        padding: `${LONG_TOP_SAFE}px 90px 80px`, display: "flex", flexDirection: "column",
         color: "#1a1918",
       }}>
         {/* Header */}
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-          paddingBottom: 32, borderBottom: "3px solid #1a1918",
+          paddingBottom: 24, borderBottom: "3px solid #1a1918",
         }}>
           <div>
             <div style={{
@@ -429,28 +431,34 @@ function LongEditorial({ review }) {
               by @{review.reviewer}
             </div>
           </div>
-          <img src={review.poster} style={{
-            width: 140, height: 210, objectFit: "cover",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-          }} />
+          <div style={{ fontSize: 20, letterSpacing: 2, textTransform: "uppercase", opacity: 0.55 }}>
+            Letterboxd
+          </div>
         </div>
 
         {/* Title */}
-        <div style={{ marginTop: 48, marginBottom: 32 }}>
-          <h1 style={{
-            fontSize: 112, fontWeight: 900, letterSpacing: -3,
-            margin: 0, lineHeight: 0.92,
-            fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
-          }}>
-            {review.title}
-          </h1>
-          <div style={{
-            marginTop: 20, display: "flex", alignItems: "baseline",
-            gap: 24, fontSize: 28,
-          }}>
-            <span style={{ opacity: 0.6, fontStyle: "italic" }}>{review.year}</span>
-            <span style={{ color: review.accent, fontSize: 40 }}>{window.starString(review.rating)}</span>
+        <div style={{ marginTop: 34, marginBottom: 24, display: "flex", gap: 36, alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              fontSize: 92, fontWeight: 900, letterSpacing: -2.3,
+              margin: 0, lineHeight: 0.92,
+              fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
+            }}>
+              {review.title}
+            </h1>
+            <div style={{
+              marginTop: 14, display: "flex", alignItems: "baseline",
+              gap: 24, fontSize: 28,
+            }}>
+              <span style={{ opacity: 0.6, fontStyle: "italic" }}>{review.year}</span>
+              <span style={{ color: review.accent, fontSize: 38 }}>{window.starString(review.rating)}</span>
+            </div>
           </div>
+          <img src={review.poster} style={{
+            width: 170, height: 255, objectFit: "cover",
+            boxShadow: "0 8px 22px rgba(0,0,0,0.18)",
+            flexShrink: 0,
+          }} />
         </div>
 
         {/* Body */}
@@ -518,32 +526,34 @@ function LongCinematic({ review }) {
 
       <div style={{
         position: "relative", height: "100%",
-        padding: "90px 80px", display: "flex", flexDirection: "column", gap: 40,
+        padding: `${LONG_TOP_SAFE}px 80px 90px`, display: "flex", flexDirection: "column", gap: 30,
       }}>
-        {/* Header: small poster + title */}
-        <div style={{ display: "flex", gap: 32, alignItems: "flex-end" }}>
-          <img src={review.poster} style={{
-            width: 180, height: 270, objectFit: "cover", borderRadius: 8,
-            boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
-            flexShrink: 0,
-          }} />
-          <div style={{ flex: 1, paddingBottom: 8 }}>
+        {/* Header: aligned title column with poster safely biased right */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 185px", gap: 34,
+          alignItems: "end", marginTop: -LONG_RIGHT_POSTER_LIFT,
+        }}>
+          <div style={{ paddingTop: LONG_RIGHT_POSTER_LIFT }}>
             <div style={{
               fontSize: 22, letterSpacing: 5, textTransform: "uppercase",
-              opacity: 0.5, marginBottom: 14, fontWeight: 500,
+              opacity: 0.5, marginBottom: 10, fontWeight: 500,
             }}>
               {review.year}
             </div>
             <h1 style={{
-              fontSize: 76, fontWeight: 800, letterSpacing: -2,
+              fontSize: 68, fontWeight: 800, letterSpacing: -1.5,
               margin: 0, lineHeight: 0.95,
             }}>
               {review.title}
             </h1>
-            <div style={{ marginTop: 16 }}>
-              <StarRow rating={review.rating} color={review.accent} size={38} />
+            <div style={{ marginTop: 12 }}>
+              <StarRow rating={review.rating} color={review.accent} size={34} />
             </div>
           </div>
+          <img src={review.poster} style={{
+            width: 185, height: 278, objectFit: "cover", borderRadius: 8,
+            boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
+          }} />
         </div>
 
         {/* Accent line */}
@@ -555,6 +565,7 @@ function LongCinematic({ review }) {
             fontSize: fit.size, lineHeight: 1.48,
             fontWeight: 300, letterSpacing: 0.2,
             color: "rgba(255,255,255,0.92)",
+            textAlign: "justify",
             whiteSpace: "pre-wrap",
           }}>
             <span style={{
@@ -591,29 +602,32 @@ function LongMinimal({ review }) {
     <StoryFrame bg="#ece7dd">
       <div style={{
         position: "relative", height: "100%",
-        padding: "90px 80px 80px", display: "flex", flexDirection: "column",
+        padding: `${LONG_TOP_SAFE}px 80px 80px`, display: "flex", flexDirection: "column",
         color: "#1a1918",
       }}>
         {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 28, marginBottom: 44 }}>
-          <img src={review.poster} style={{
-            width: 110, height: 165, objectFit: "cover", borderRadius: 4,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-          }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 160px", gap: 32,
+          alignItems: "end", marginTop: -LONG_RIGHT_POSTER_LIFT, marginBottom: 30,
+        }}>
+          <div style={{ minWidth: 0, paddingTop: LONG_RIGHT_POSTER_LIFT }}>
             <h1 style={{
-              fontSize: 58, fontWeight: 800, letterSpacing: -1.5,
+              fontSize: 52, fontWeight: 800, letterSpacing: -1.2,
               margin: 0, lineHeight: 1,
               fontFamily: "'Inter', sans-serif",
             }}>
               {review.title}
             </h1>
             <div style={{
-              marginTop: 10, fontSize: 24, opacity: 0.55, letterSpacing: 0.5,
+              marginTop: 8, fontSize: 22, opacity: 0.55, letterSpacing: 0.5,
             }}>
               {review.year} · <span style={{ color: review.accent, fontWeight: 600 }}>{window.starString(review.rating)}</span>
             </div>
           </div>
+          <img src={review.poster} style={{
+            width: 160, height: 240, objectFit: "cover", borderRadius: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+          }} />
         </div>
 
         {/* Body */}
@@ -621,6 +635,7 @@ function LongMinimal({ review }) {
           <div style={{
             fontSize: fit.size, lineHeight: 1.4,
             fontFamily: "'DM Serif Text', 'Source Serif Pro', Georgia, serif",
+            textAlign: "justify",
             whiteSpace: "pre-wrap",
             color: "#1a1918",
           }}>
