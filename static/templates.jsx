@@ -336,18 +336,6 @@ function ShortFullBleed({ review }) {
         background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0.95) 100%)",
       }} />
 
-      {/* Top chip - rating badge */}
-      <div style={{ position: "absolute", top: 80, left: 80, display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{
-          padding: "14px 22px", borderRadius: 100,
-          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          display: "flex", alignItems: "center", gap: 12,
-        }}>
-          <StarRow rating={review.rating} color={review.accent} size={30} />
-        </div>
-      </div>
-
       {/* Bottom content */}
       <div style={{
         position: "absolute", left: 0, right: 0, bottom: 0,
@@ -356,10 +344,12 @@ function ShortFullBleed({ review }) {
       }}>
         <div>
           <div style={{
+            display: "flex", alignItems: "center", gap: 18,
             fontSize: 22, letterSpacing: 6, textTransform: "uppercase",
-            opacity: 0.6, marginBottom: 16, fontWeight: 500,
+            opacity: 0.72, marginBottom: 16, fontWeight: 500,
           }}>
-            {review.year}
+            <span>{review.year}</span>
+            <StarRow rating={review.rating} color={review.accent} size={30} />
           </div>
           <h1 style={{
             fontSize: 140, fontWeight: 900, letterSpacing: -4,
