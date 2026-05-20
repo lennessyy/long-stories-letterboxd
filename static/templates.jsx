@@ -25,52 +25,70 @@ window.starString = function (rating) {
 // Measures via a hidden ref'd div; picks the largest size that fits container height.
 function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [] }) {
   const measureRef = React.useRef(null);
+  // Optional inner target. If the template provides this (e.g. a <span> living
+  // alongside a decorative prefix like a quote mark inside measureRef), we set
+  // textContent on it instead of on measureRef itself — so the prefix stays in
+  // place and contributes its real width to the wrapped-text measurement.
+  const measureTextRef = React.useRef(null);
   const containerRef = React.useRef(null);
   const [size, setSize] = React.useState(maxSize);
   const [truncated, setTruncated] = React.useState(false);
   const [shown, setShown] = React.useState(text);
 
   React.useLayoutEffect(() => {
-    const container = containerRef.current;
-    const measure = measureRef.current;
-    if (!container || !measure) return;
-    const availH = container.clientHeight;
+    let cancelled = false;
+    const measureAndFit = () => {
+      if (cancelled) return;
+      const container = containerRef.current;
+      const measure = measureRef.current;
+      if (!container || !measure) return;
+      const textTarget = measureTextRef.current || measure;
+      const availH = container.clientHeight;
 
-    // Try largest -> smallest
-    let chosen = minSize;
-    for (let s = maxSize; s >= minSize; s -= step) {
-      measure.style.fontSize = s + "px";
-      measure.textContent = text;
-      if (measure.scrollHeight <= availH) {
-        chosen = s;
-        setTruncated(false);
-        setShown(text);
-        setSize(s);
-        return;
+      // Try largest -> smallest
+      for (let s = maxSize; s >= minSize; s -= step) {
+        measure.style.fontSize = s + "px";
+        textTarget.textContent = text;
+        if (measure.scrollHeight <= availH) {
+          setTruncated(false);
+          setShown(text);
+          setSize(s);
+          return;
+        }
       }
-    }
-    // Still too long at min — truncate with ellipsis
-    measure.style.fontSize = minSize + "px";
-    let lo = 0, hi = text.length, best = 0;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      measure.textContent = text.slice(0, mid).trimEnd() + "…";
-      if (measure.scrollHeight <= availH) {
-        best = mid; lo = mid + 1;
-      } else {
-        hi = mid - 1;
+      // Still too long at min — truncate with ellipsis
+      measure.style.fontSize = minSize + "px";
+      let lo = 0, hi = text.length, best = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        textTarget.textContent = text.slice(0, mid).trimEnd() + "…";
+        if (measure.scrollHeight <= availH) {
+          best = mid; lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
       }
+      // Prefer last sentence boundary
+      const slice = text.slice(0, best);
+      const lastBreak = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("? "), slice.lastIndexOf("! "));
+      const finalText = (lastBreak > best * 0.6 ? slice.slice(0, lastBreak + 1) : slice.trimEnd()) + "…";
+      setShown(finalText);
+      setTruncated(true);
+      setSize(minSize);
+    };
+
+    // Wait for web fonts before measuring — otherwise the fallback font's
+    // metrics produce a stale fit and the real font overflows the container
+    // once it swaps in, causing the body to get clipped without an ellipsis.
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(measureAndFit);
+    } else {
+      measureAndFit();
     }
-    // Prefer last sentence boundary
-    const slice = text.slice(0, best);
-    const lastBreak = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("? "), slice.lastIndexOf("! "));
-    const finalText = (lastBreak > best * 0.6 ? slice.slice(0, lastBreak + 1) : slice.trimEnd()) + "…";
-    setShown(finalText);
-    setTruncated(true);
-    setSize(minSize);
+    return () => { cancelled = true; };
   }, [text, minSize, maxSize, step, ...deps]);
 
-  return { size, truncated, shown, containerRef, measureRef };
+  return { size, truncated, shown, containerRef, measureRef, measureTextRef };
 }
 
 // Tiny SVG Letterboxd logo (3 dots)
@@ -617,19 +635,30 @@ function LongCinematic({ review }) {
             whiteSpace: "pre-wrap",
           }}>
             <span style={{
-              fontSize: fit.size * 1.8, color: review.accent,
-              lineHeight: 0.8, marginRight: 6, fontFamily: "Georgia, serif",
+              fontSize: "1.8em", color: review.accent,
+              lineHeight: 0.8, marginRight: "0.2em", fontFamily: "Georgia, serif",
               verticalAlign: "-0.3em",
             }}>"</span>
             {fit.shown}
           </div>
+          {/* Measure mirrors the rendered structure (including the leading
+              quote span) so its scrollHeight reflects the width the quote
+              steals from the first line. Em-based sizing on the quote keeps
+              it in sync when useFitFont mutates the wrapper's fontSize. */}
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
             left: 0, top: 0, right: 0,
             fontSize: fit.size, lineHeight: 1.48,
             fontWeight: 300, letterSpacing: 0.2,
             whiteSpace: "pre-wrap",
-          }} />
+          }}>
+            <span style={{
+              fontSize: "1.8em", lineHeight: 0.8,
+              marginRight: "0.2em", fontFamily: "Georgia, serif",
+              verticalAlign: "-0.3em",
+            }}>"</span>
+            <span ref={fit.measureTextRef} />
+          </div>
         </div>
 
         {/* Footer */}
