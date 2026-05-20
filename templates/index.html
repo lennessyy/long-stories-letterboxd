@@ -174,7 +174,29 @@ function Carousel({ review, onBack }) {
     const prev = node.style.transform;
     node.style.transform = "none";
     try {
-      const opts = { width: STORY_W, height: STORY_H, pixelRatio: 1 };
+      if (document.fonts?.ready) await document.fonts.ready;
+      await Promise.all(Array.from(node.querySelectorAll("img")).map(img => (
+        img.complete ? Promise.resolve() : new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        })
+      )));
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+
+      const fontEmbedCSS = await htmlToImage.getFontEmbedCSS(node).catch(() => "");
+
+      const opts = {
+        width: STORY_W,
+        height: STORY_H,
+        pixelRatio: 1,
+        fontEmbedCSS,
+        style: {
+          width: `${STORY_W}px`,
+          height: `${STORY_H}px`,
+          transform: "none",
+        },
+      };
       // Run twice — first pass warms image fetches, second renders correctly
       const fn = format === "blob" ? htmlToImage.toBlob : htmlToImage.toPng;
       await fn(node, opts);

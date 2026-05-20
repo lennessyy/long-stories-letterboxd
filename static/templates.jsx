@@ -392,8 +392,57 @@ function LongEditorial({ review }) {
     deps: [review.id],
   });
 
+  // Auto-fit title size based on character count. Short titles (≤30 chars) are
+  // shrunk until they fit on a single line within the column; longer titles are
+  // allowed to wrap to two lines. The wide safety margin (0.78) absorbs the
+  // font-metric drift we see in html-to-image's export — the export sometimes
+  // renders the title wider than the live page, so we shrink the page-side
+  // title enough that even a drifted export still fits within the column.
+  const TITLE_COL_W = 694;
+  const TITLE_SAFETY = 0.78;
+  const TITLE_MAX_LINES = review.title.length <= 18 ? 1 : 2;
+  const [titleSize, setTitleSize] = React.useState(92);
+  const titleProbeRef = React.useRef(null);
+
+  React.useLayoutEffect(() => {
+    const probe = titleProbeRef.current;
+    if (!probe) return;
+    const fitTitle = () => {
+      probe.style.width = TITLE_COL_W * TITLE_SAFETY + "px";
+      let size = 92;
+      while (size > 44) {
+        probe.style.fontSize = size + "px";
+        const lines = Math.max(1, Math.round(probe.scrollHeight / size));
+        if (lines <= TITLE_MAX_LINES) break;
+        size -= 2;
+      }
+      setTitleSize(size);
+    };
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(fitTitle);
+    } else {
+      fitTitle();
+    }
+  }, [review.title, review.id, TITLE_MAX_LINES]);
+
   return (
     <StoryFrame bg="#f4efe6">
+      {/* html-to-image clones each element's computed pixel dimensions as
+          inline styles, which freezes the layout to whatever the live page
+          rendered. When the SVG export then reflows text with slightly
+          different font metrics, the title's visual content overflows its
+          pinned box but the year row stays at the page-pinned offset, causing
+          overlap. This <style> rides inside the cloned tree so its
+          !important rules win against the cloned inline styles, restoring
+          content-driven sizing in the export. */}
+      <style>{`
+        .editorial-fluid {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+        }
+      `}</style>
+
       {/* Paper texture */}
       <div style={{
         position: "absolute", inset: 0, opacity: 0.08,
@@ -427,16 +476,26 @@ function LongEditorial({ review }) {
         </div>
 
         {/* Title */}
-        <div style={{ marginTop: 34, marginBottom: 24, display: "flex", gap: 36, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{
-              fontSize: 92, fontWeight: 900, letterSpacing: -2.3,
-              margin: 0, lineHeight: 0.92,
+        <div className="editorial-fluid" style={{ marginTop: 34, marginBottom: 24, display: "grid", gridTemplateColumns: "minmax(0, 1fr) 170px", gap: 36, alignItems: "start" }}>
+          <div className="editorial-fluid" style={{ minWidth: 0 }}>
+            <h1 className="editorial-fluid" style={{
+              fontSize: titleSize, fontWeight: 900, letterSpacing: -2.3,
+              margin: 0, lineHeight: 1,
+              fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
+              overflowWrap: "break-word",
+            }}>
+              {review.title}
+            </h1>
+            {/* Hidden probe used to measure wrapped title height at each font-size. */}
+            <h1 ref={titleProbeRef} aria-hidden="true" style={{
+              position: "absolute", visibility: "hidden", pointerEvents: "none",
+              top: 0, left: 0, margin: 0, padding: 0,
+              fontWeight: 900, letterSpacing: -2.3, lineHeight: 1,
               fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
             }}>
               {review.title}
             </h1>
-            <div style={{
+            <div className="editorial-fluid" style={{
               marginTop: 14, display: "flex", alignItems: "baseline",
               gap: 24, fontSize: 28,
             }}>
@@ -447,7 +506,6 @@ function LongEditorial({ review }) {
           <img src={review.poster} style={{
             width: 170, height: 255, objectFit: "cover",
             boxShadow: "0 8px 22px rgba(0,0,0,0.18)",
-            flexShrink: 0,
           }} />
         </div>
 
