@@ -231,7 +231,7 @@ def image_proxy():
         resp = requests.get(img_url, headers=UA, timeout=10)
         resp.raise_for_status()
         content_type = resp.headers.get("Content-Type", "image/jpeg")
-        return resp.content, 200, {"Content-Type": content_type, "Cache-Control": "public, max-age=86400"}
+        return resp.content, 200, {"Content-Type": content_type, "Cache-Control": "public, max-age=86400", "Access-Control-Allow-Origin": "*"}
     except Exception:
         return "Image fetch failed", 502
 
