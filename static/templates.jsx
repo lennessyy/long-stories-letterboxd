@@ -10,10 +10,17 @@ const STORY_H = 1920;
 const LONG_TOP_SAFE = 150;
 const LONG_RIGHT_POSTER_LIFT = 44;
 
+function hasRating(rating) {
+  const value = Number(rating);
+  return Number.isFinite(value) && value > 0;
+}
+
 // Render star rating as text: ★★★½
 window.starString = function (rating) {
-  const full = Math.floor(rating || 0);
-  const half = (rating || 0) - full >= 0.5;
+  if (!hasRating(rating)) return "";
+  const value = Math.min(Number(rating), 5);
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
   return "★".repeat(full) + (half ? "½" : "");
 };
 
@@ -194,8 +201,10 @@ function ReviewerFooter({ handle, color = "rgba(255,255,255,0.85)", align = "lef
 
 // Convert rating into filled + half + empty star glyphs with subtle visual weight
 function StarRow({ rating, color = "#ff8000", size = 56, opacity = 1 }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
+  if (!hasRating(rating)) return null;
+  const value = Math.min(Number(rating), 5);
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
   const empty = 5 - full - (half ? 1 : 0);
   return (
     <div style={{ fontSize: size, lineHeight: 1, color, letterSpacing: 2, opacity, fontFamily: "serif" }}>
@@ -282,9 +291,11 @@ function ShortPosterHero({ review }) {
             {review.title}
             <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
           </h1>
-          <div style={{ marginTop: 16 }}>
-            <StarRow rating={review.rating} color={review.accent} size={56} />
-          </div>
+          {hasRating(review.rating) && (
+            <div style={{ marginTop: 16 }}>
+              <StarRow rating={review.rating} color={review.accent} size={56} />
+            </div>
+          )}
         </div>
 
         {/* Review text */}
@@ -376,9 +387,11 @@ function ShortTicketStub({ review }) {
                 {review.title}
               </h1>
               <div style={{ fontSize: 26, opacity: 0.65, marginTop: 8, fontStyle: "italic" }}>{review.year}</div>
-              <div style={{ marginTop: 20 }}>
-                <StarRow rating={review.rating} color="#c8441a" size={46} />
-              </div>
+              {hasRating(review.rating) && (
+                <div style={{ marginTop: 20 }}>
+                  <StarRow rating={review.rating} color="#c8441a" size={46} />
+                </div>
+              )}
             </div>
           </div>
 
@@ -603,7 +616,9 @@ function LongEditorial({ review }) {
               gap: 24, fontSize: 28,
             }}>
               <span style={{ opacity: 0.6, fontStyle: "italic" }}>{review.year}</span>
-              <span style={{ color: review.accent, fontSize: 38 }}>{window.starString(review.rating)}</span>
+              {hasRating(review.rating) && (
+                <span style={{ color: review.accent, fontSize: 38 }}>{window.starString(review.rating)}</span>
+              )}
             </div>
           </div>
           <img src={review.poster} style={{
@@ -697,9 +712,11 @@ function LongCinematic({ review }) {
             }}>
               {review.title}
             </h1>
-            <div style={{ marginTop: 12 }}>
-              <StarRow rating={review.rating} color={review.accent} size={34} />
-            </div>
+            {hasRating(review.rating) && (
+              <div style={{ marginTop: 12 }}>
+                <StarRow rating={review.rating} color={review.accent} size={34} />
+              </div>
+            )}
           </div>
           <img src={review.poster} style={{
             width: 185, height: 278, objectFit: "cover", borderRadius: 8,
@@ -783,7 +800,10 @@ function LongMinimal({ review }) {
             <div style={{
               marginTop: 8, fontSize: 22, opacity: 0.55, letterSpacing: 0.5,
             }}>
-              {review.year} · <span style={{ color: review.accent, fontWeight: 600 }}>{window.starString(review.rating)}</span>
+              {review.year}
+              {hasRating(review.rating) && (
+                <> · <span style={{ color: review.accent, fontWeight: 600 }}>{window.starString(review.rating)}</span></>
+              )}
             </div>
           </div>
           <img src={review.poster} style={{
@@ -885,9 +905,11 @@ function LongVerticalSplit({ review }) {
         </h1>
 
         {/* Stars */}
-        <div style={{ marginTop: 14 }}>
-          <StarRow rating={review.rating} color={stars} size={34} />
-        </div>
+        {hasRating(review.rating) && (
+          <div style={{ marginTop: 14 }}>
+            <StarRow rating={review.rating} color={stars} size={34} />
+          </div>
+        )}
 
         {/* Accent divider */}
         <div style={{
@@ -1017,7 +1039,9 @@ function LongEditorialDark({ review }) {
               gap: 24, fontSize: 28,
             }}>
               <span style={{ opacity: 0.5, fontStyle: "italic" }}>{review.year}</span>
-              <span style={{ color: "#c8a050", fontSize: 38 }}>{window.starString(review.rating)}</span>
+              {hasRating(review.rating) && (
+                <span style={{ color: "#c8a050", fontSize: 38 }}>{window.starString(review.rating)}</span>
+              )}
             </div>
           </div>
           <img src={review.poster} style={{
