@@ -173,6 +173,93 @@ function starColor(bgRgb) {
   return dist < 120 ? "#ffffff" : "#ff8000";
 }
 
+function stripEmphasis(text) {
+  return (text || "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/([*_])([^*_]+)\1/g, "$2");
+}
+
+const strongEmphasisStyle = {
+  fontFamily: "'Source Serif Pro', Georgia, serif",
+  fontWeight: 700,
+  textShadow: "0.35px 0 currentColor",
+};
+
+const italicEmphasisStyle = {
+  fontFamily: "'Source Serif Pro', Georgia, serif",
+  fontStyle: "italic",
+  fontWeight: 600,
+};
+
+function parseEmphasis(text) {
+  const tokens = [];
+  const source = text || "";
+  let i = 0;
+
+  const pushText = (value) => {
+    if (value) tokens.push({ type: "text", value });
+  };
+
+  while (i < source.length) {
+    if (source.startsWith("**", i)) {
+      const end = source.indexOf("**", i + 2);
+      if (end > i + 2) {
+        tokens.push({ type: "strong", value: source.slice(i + 2, end) });
+        i = end + 2;
+        continue;
+      }
+    }
+
+    const marker = source[i];
+    if (marker === "*" || marker === "_") {
+      const end = source.indexOf(marker, i + 1);
+      if (end > i + 1) {
+        tokens.push({ type: "em", value: source.slice(i + 1, end) });
+        i = end + 1;
+        continue;
+      }
+    }
+
+    const nextBold = source.indexOf("**", i + 1);
+    const nextStar = source.indexOf("*", i + 1);
+    const nextUnderscore = source.indexOf("_", i + 1);
+    const candidates = [nextBold, nextStar, nextUnderscore].filter(n => n !== -1);
+    const next = candidates.length ? Math.min(...candidates) : source.length;
+    pushText(source.slice(i, next));
+    i = next;
+  }
+
+  return tokens;
+}
+
+function renderEmphasisTokens(tokens) {
+  return tokens.map((token, index) => {
+    if (token.type === "strong") {
+      return <strong key={index} style={strongEmphasisStyle}>{token.value}</strong>;
+    }
+    if (token.type === "em") {
+      return <em key={index} style={italicEmphasisStyle}>{token.value}</em>;
+    }
+    return token.value;
+  });
+}
+
+function renderEmphasis(text) {
+  return renderEmphasisTokens(parseEmphasis(text));
+}
+
+function dropFirstVisibleChar(text) {
+  const tokens = parseEmphasis(text);
+  for (const token of tokens) {
+    if (!token.value) continue;
+    token.value = token.value.slice(1);
+    break;
+  }
+  return tokens.filter(token => token.value);
+}
+
+function renderEmphasisAfterFirstChar(text) {
+  return renderEmphasisTokens(dropFirstVisibleChar(text));
+}
+
 // Tiny SVG Letterboxd logo (3 dots)
 function LetterboxdMark({ size = 56 }) {
   const r = size * 0.2;
@@ -304,7 +391,7 @@ function ShortPosterHero({ review }) {
           color: "rgba(255,255,255,0.93)", maxWidth: 820, margin: 0,
           fontWeight: 300, letterSpacing: 0.1,
         }}>
-          {review.review}
+          {renderEmphasis(review.review)}
         </p>
       </div>
 
@@ -408,7 +495,7 @@ function ShortTicketStub({ review }) {
               fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
               fontWeight: 400,
             }}>
-              {review.review}
+              {renderEmphasis(review.review)}
             </p>
             <div style={{
               marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(26,15,10,0.15)",
@@ -486,7 +573,7 @@ function ShortFullBleed({ review }) {
           fontWeight: 300, letterSpacing: 0.2,
           maxWidth: 900,
         }}>
-          {review.review}
+          {renderEmphasis(review.review)}
         </p>
 
         <div style={{ marginTop: 12 }}>
@@ -640,8 +727,8 @@ function LongEditorial({ review }) {
               float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
               fontWeight: 900, paddingRight: 10, paddingTop: 6,
               fontFamily: "'DM Serif Display', Georgia, serif",
-            }}>{fit.shown.charAt(0)}</span>
-            {fit.shown.slice(1)}
+            }}>{stripEmphasis(fit.shown).charAt(0)}</span>
+            {renderEmphasisAfterFirstChar(fit.shown)}
           </div>
           {/* hidden measurer */}
           <div ref={fit.measureRef} style={{
@@ -741,7 +828,7 @@ function LongCinematic({ review }) {
               lineHeight: 0.8, marginRight: "0.2em", fontFamily: "Georgia, serif",
               verticalAlign: "-0.3em",
             }}>"</span>
-            {fit.shown}
+            {renderEmphasis(fit.shown)}
           </div>
           {/* Measure mirrors the rendered structure (including the leading
               quote span) so its scrollHeight reflects the width the quote
@@ -821,7 +908,7 @@ function LongMinimal({ review }) {
             whiteSpace: "pre-wrap",
             color: "#1a1918",
           }}>
-            {fit.shown}
+            {renderEmphasis(fit.shown)}
           </div>
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
@@ -925,7 +1012,7 @@ function LongVerticalSplit({ review }) {
             color: "rgba(255,255,255,0.88)",
             whiteSpace: "pre-wrap",
           }}>
-            {fit.shown}
+            {renderEmphasis(fit.shown)}
           </div>
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
@@ -1064,8 +1151,8 @@ function LongEditorialDark({ review }) {
               fontWeight: 900, paddingRight: 10, paddingTop: 6,
               fontFamily: "'DM Serif Display', Georgia, serif",
               color: "#f0ebe4",
-            }}>{fit.shown.charAt(0)}</span>
-            {fit.shown.slice(1)}
+            }}>{stripEmphasis(fit.shown).charAt(0)}</span>
+            {renderEmphasisAfterFirstChar(fit.shown)}
           </div>
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
@@ -1178,7 +1265,7 @@ function LongScreenplay({ review }) {
             whiteSpace: "pre-wrap",
             color: "#1a1816",
           }}>
-            {fit.shown}
+            {renderEmphasis(fit.shown)}
           </div>
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
