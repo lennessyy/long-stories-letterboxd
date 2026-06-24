@@ -34,7 +34,7 @@ window.starString = function (rating) {
 
 // Fit review text by auto-shrinking font size if needed.
 // Measures via a hidden ref'd div; picks the largest size that fits container height.
-function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], heightSlack = 0 }) {
+function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], heightSlack = 0, constrainHeight = false }) {
   const measureRef = React.useRef(null);
   // Optional inner target. If the template provides this (e.g. a <span> living
   // alongside a decorative prefix like a quote mark inside measureRef), we set
@@ -55,12 +55,24 @@ function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], hei
       if (!container || !measure) return;
       const textTarget = measureTextRef.current || measure;
       const availH = Math.max(0, container.clientHeight - heightSlack);
+      if (constrainHeight) {
+        measure.style.height = availH + "px";
+        measure.style.maxHeight = availH + "px";
+      } else {
+        measure.style.height = "";
+        measure.style.maxHeight = "";
+      }
+
+      const fits = () => (
+        measure.scrollHeight <= availH + 1 &&
+        measure.scrollWidth <= measure.clientWidth + 1
+      );
 
       // Try largest -> smallest
       for (let s = maxSize; s >= minSize; s -= step) {
         measure.style.fontSize = s + "px";
         textTarget.textContent = text;
-        if (measure.scrollHeight <= availH) {
+        if (fits()) {
           setTruncated(false);
           setShown(text);
           setSize(s);
@@ -73,7 +85,7 @@ function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], hei
       while (lo <= hi) {
         const mid = (lo + hi) >> 1;
         textTarget.textContent = text.slice(0, mid).trimEnd() + "…";
-        if (measure.scrollHeight <= availH) {
+        if (fits()) {
           best = mid; lo = mid + 1;
         } else {
           hi = mid - 1;
@@ -97,7 +109,7 @@ function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], hei
       measureAndFit();
     }
     return () => { cancelled = true; };
-  }, [text, minSize, maxSize, step, heightSlack, ...deps]);
+  }, [text, minSize, maxSize, step, heightSlack, constrainHeight, ...deps]);
 
   return { size, truncated, shown, containerRef, measureRef, measureTextRef };
 }
@@ -630,6 +642,7 @@ function LongEditorial({ review }) {
   const fit = useFitFont({
     text: review.review, minSize: 18, maxSize: 36, step: 1,
     heightSlack: 48,
+    constrainHeight: true,
     deps: [review.id],
   });
 
@@ -774,7 +787,15 @@ function LongEditorial({ review }) {
             fontFamily: "'Source Serif Pro', Georgia, serif",
             columnCount: 2, columnGap: 48,
             whiteSpace: "pre-wrap",
-          }} />
+            overflow: "visible",
+          }}>
+            <span style={{
+              float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
+              fontWeight: 900, paddingRight: 10, paddingTop: 6,
+              fontFamily: "'DM Serif Display', Georgia, serif",
+            }}>{stripEmphasis(review.review).charAt(0)}</span>
+            <span ref={fit.measureTextRef} />
+          </div>
         </div>
 
         {/* Footer */}
@@ -1073,6 +1094,7 @@ function LongEditorialDark({ review }) {
   const fit = useFitFont({
     text: review.review, minSize: 18, maxSize: 36, step: 1,
     heightSlack: 48,
+    constrainHeight: true,
     deps: [review.id],
   });
 
@@ -1196,7 +1218,15 @@ function LongEditorialDark({ review }) {
             fontFamily: "'Source Serif Pro', Georgia, serif",
             columnCount: 2, columnGap: 48,
             whiteSpace: "pre-wrap",
-          }} />
+            overflow: "visible",
+          }}>
+            <span style={{
+              float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
+              fontWeight: 900, paddingRight: 10, paddingTop: 6,
+              fontFamily: "'DM Serif Display', Georgia, serif",
+            }}>{stripEmphasis(review.review).charAt(0)}</span>
+            <span ref={fit.measureTextRef} />
+          </div>
         </div>
 
         {/* Footer */}
