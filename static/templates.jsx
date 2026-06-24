@@ -276,6 +276,34 @@ function renderEmphasisAfterFirstChar(text) {
   return renderEmphasisTokens(dropFirstVisibleChar(text));
 }
 
+function splitForColumns(text) {
+  const source = text || "";
+  if (source.length < 2) return [source, ""];
+  const target = Math.floor(source.length / 2);
+  const min = Math.floor(source.length * 0.38);
+  const max = Math.floor(source.length * 0.62);
+  const candidates = [];
+
+  const addMatches = (pattern, offset = 0) => {
+    let match;
+    const re = new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g");
+    while ((match = re.exec(source))) {
+      const index = match.index + match[0].length + offset;
+      if (index >= min && index <= max) candidates.push(index);
+    }
+  };
+
+  addMatches(/\n\n/g);
+  addMatches(/[.!?]\s+/g);
+  addMatches(/,\s+/g);
+  addMatches(/\s+/g);
+
+  const splitAt = candidates.length
+    ? candidates.sort((a, b) => Math.abs(a - target) - Math.abs(b - target))[0]
+    : target;
+  return [source.slice(0, splitAt).trimEnd(), source.slice(splitAt).trimStart()];
+}
+
 // Tiny SVG Letterboxd logo (3 dots)
 function LetterboxdMark({ size = 56 }) {
   const r = size * 0.2;
@@ -679,6 +707,8 @@ function LongEditorial({ review }) {
     }
   }, [review.title, review.id, TITLE_MAX_LINES]);
 
+  const [leftColumn, rightColumn] = splitForColumns(fit.shown);
+
   return (
     <StoryFrame bg="#f4efe6">
       {/* html-to-image clones each element's computed pixel dimensions as
@@ -768,16 +798,25 @@ function LongEditorial({ review }) {
           <div style={{
             fontSize: fit.size, lineHeight: 1.42,
             fontFamily: "'Source Serif Pro', 'DM Serif Text', Georgia, serif",
-            columnCount: 2, columnGap: 48, columnRule: "1px solid rgba(0,0,0,0.15)",
-            whiteSpace: "pre-wrap",
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48,
+            height: "100%",
           }}>
-            {/* drop cap on first letter */}
-            <span style={{
-              float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
-              fontWeight: 900, paddingRight: 10, paddingTop: 6,
-              fontFamily: "'DM Serif Display', Georgia, serif",
-            }}>{stripEmphasis(fit.shown).charAt(0)}</span>
-            {renderEmphasisAfterFirstChar(fit.shown)}
+            <div style={{ minWidth: 0, overflow: "hidden", whiteSpace: "pre-wrap" }}>
+              {/* drop cap on first letter */}
+              <span style={{
+                float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
+                fontWeight: 900, paddingRight: 10, paddingTop: 6,
+                fontFamily: "'DM Serif Display', Georgia, serif",
+              }}>{stripEmphasis(leftColumn).charAt(0)}</span>
+              {renderEmphasisAfterFirstChar(leftColumn)}
+            </div>
+            <div style={{
+              minWidth: 0, overflow: "hidden", whiteSpace: "pre-wrap",
+              borderLeft: "1px solid rgba(0,0,0,0.15)", paddingLeft: 48,
+              marginLeft: -24,
+            }}>
+              {renderEmphasis(rightColumn)}
+            </div>
           </div>
           {/* hidden measurer */}
           <div ref={fit.measureRef} style={{
@@ -1125,6 +1164,8 @@ function LongEditorialDark({ review }) {
     }
   }, [review.title, review.id, TITLE_MAX_LINES]);
 
+  const [leftColumn, rightColumn] = splitForColumns(fit.shown);
+
   return (
     <StoryFrame bg="#111111">
       <style>{`
@@ -1199,17 +1240,26 @@ function LongEditorialDark({ review }) {
           <div style={{
             fontSize: fit.size, lineHeight: 1.42,
             fontFamily: "'Source Serif Pro', 'DM Serif Text', Georgia, serif",
-            columnCount: 2, columnGap: 48, columnRule: "1px solid rgba(212,201,184,0.12)",
-            whiteSpace: "pre-wrap",
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48,
+            height: "100%",
             color: "rgba(212,201,184,0.9)",
           }}>
-            <span style={{
-              float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
-              fontWeight: 900, paddingRight: 10, paddingTop: 6,
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              color: "#f0ebe4",
-            }}>{stripEmphasis(fit.shown).charAt(0)}</span>
-            {renderEmphasisAfterFirstChar(fit.shown)}
+            <div style={{ minWidth: 0, overflow: "hidden", whiteSpace: "pre-wrap" }}>
+              <span style={{
+                float: "left", fontSize: fit.size * 3.2, lineHeight: 0.82,
+                fontWeight: 900, paddingRight: 10, paddingTop: 6,
+                fontFamily: "'DM Serif Display', Georgia, serif",
+                color: "#f0ebe4",
+              }}>{stripEmphasis(leftColumn).charAt(0)}</span>
+              {renderEmphasisAfterFirstChar(leftColumn)}
+            </div>
+            <div style={{
+              minWidth: 0, overflow: "hidden", whiteSpace: "pre-wrap",
+              borderLeft: "1px solid rgba(212,201,184,0.12)", paddingLeft: 48,
+              marginLeft: -24,
+            }}>
+              {renderEmphasis(rightColumn)}
+            </div>
           </div>
           <div ref={fit.measureRef} style={{
             position: "absolute", visibility: "hidden", pointerEvents: "none",
