@@ -87,6 +87,7 @@ function adapt(r) {
     title: r.movie_title,
     year: r.year,
     rating: Number(r.rating) || 0,
+    liked: r.liked === true || r.liked === "true" || r.liked === "Yes",
     review: r.review_text || "",
     poster: img,
     backdrop: img,

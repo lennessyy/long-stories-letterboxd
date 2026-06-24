@@ -42,6 +42,27 @@ def fetch_backdrop(film_slug: str) -> str | None:
         return None
 
 
+def parse_letterboxd_bool(value) -> bool:
+    return str(value or "").strip().lower() in {"yes", "true", "1"}
+
+
+def scrape_liked_from_page(soup: BeautifulSoup) -> bool | None:
+    """
+    RSS exposes the user's film-like state directly. Older reviews can fall
+    back to the public review page, where the marker is less stable, so only
+    return True when we find an explicit liked-state class/attribute.
+    """
+    liked_selectors = [
+        ".icon-liked",
+        ".like-link-target.-liked",
+        ".like-link-target.liked",
+        ".like-link-target.has-liked",
+        "[data-liked='true']",
+        "[data-liked='True']",
+    ]
+    return True if any(soup.select_one(selector) for selector in liked_selectors) else None
+
+
 def scrape_from_rss(user: str, film_slug: str) -> dict | None:
     """Try the RSS feed first — fast and reliable for recent reviews."""
     feed = feedparser.parse(f"https://letterboxd.com/{user}/rss/")
@@ -78,6 +99,7 @@ def scrape_from_rss(user: str, film_slug: str) -> dict | None:
         "movie_title": movie_title,
         "year": str(year),
         "rating": rating,
+        "liked": parse_letterboxd_bool(entry.get("letterboxd_memberlike") or entry.get("lb_memberlike")),
         "review_text": review_text,
         "backdrop_url": fetch_backdrop(film_slug),
         "reviewer_handle": user,
@@ -139,6 +161,7 @@ def scrape_from_page(url: str, user: str, film_slug: str) -> dict:
         "movie_title": movie_title,
         "year": str(year),
         "rating": rating,
+        "liked": scrape_liked_from_page(soup),
         "review_text": review_text,
         "backdrop_url": fetch_backdrop(film_slug),
         "reviewer_handle": user,
@@ -172,6 +195,7 @@ SAMPLES = {
         "movie_title": "Her Story",
         "year": "2024",
         "rating": 5.0,
+        "liked": True,
         "review_text": (
             "loved, loved, loved this movie. It’s delicate, daring, delightfully "
             "poignant, and hysterically hilarious. i spent much of the runtime in "
@@ -202,6 +226,7 @@ SAMPLES = {
         "movie_title": "Gladiator II",
         "year": "2024",
         "rating": 2.0,
+        "liked": False,
         "review_text": (
             "paul mescal’s character changes his entire personality after every "
             "fight. no character really stood out to me in this movie at all and "

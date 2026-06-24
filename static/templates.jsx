@@ -15,6 +15,10 @@ function hasRating(rating) {
   return Number.isFinite(value) && value > 0;
 }
 
+function isLiked(review) {
+  return review?.liked === true || review?.liked === "true" || review?.liked === "Yes";
+}
+
 // Render star rating as text: ★★★½
 window.starString = function (rating) {
   if (!hasRating(rating)) return "";
@@ -30,7 +34,7 @@ window.starString = function (rating) {
 
 // Fit review text by auto-shrinking font size if needed.
 // Measures via a hidden ref'd div; picks the largest size that fits container height.
-function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [] }) {
+function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [], heightSlack = 0 }) {
   const measureRef = React.useRef(null);
   // Optional inner target. If the template provides this (e.g. a <span> living
   // alongside a decorative prefix like a quote mark inside measureRef), we set
@@ -50,7 +54,7 @@ function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [] }) {
       const measure = measureRef.current;
       if (!container || !measure) return;
       const textTarget = measureTextRef.current || measure;
-      const availH = container.clientHeight;
+      const availH = Math.max(0, container.clientHeight - heightSlack);
 
       // Try largest -> smallest
       for (let s = maxSize; s >= minSize; s -= step) {
@@ -93,7 +97,7 @@ function useFitFont({ text, minSize = 22, maxSize = 56, step = 2, deps = [] }) {
       measureAndFit();
     }
     return () => { cancelled = true; };
-  }, [text, minSize, maxSize, step, ...deps]);
+  }, [text, minSize, maxSize, step, heightSlack, ...deps]);
 
   return { size, truncated, shown, containerRef, measureRef, measureTextRef };
 }
@@ -301,6 +305,39 @@ function StarRow({ rating, color = "#ff8000", size = 56, opacity = 1 }) {
   );
 }
 
+function HeartMark({ color = "#ff4d5a", size = 56, opacity = 1 }) {
+  return (
+    <span style={{
+      color, fontSize: size, lineHeight: 1, opacity,
+      fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 800,
+    }}>
+      ♥
+    </span>
+  );
+}
+
+function RatingHeartRow({ review, color = "#ff8000", heartColor = "#ff4d5a", size = 56, gap = 14, opacity = 1 }) {
+  if (!hasRating(review.rating) && !isLiked(review)) return null;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap, lineHeight: 1 }}>
+      <StarRow rating={review.rating} color={color} size={size} opacity={opacity} />
+      {isLiked(review) && <HeartMark color={heartColor} size={size * 0.92} opacity={opacity} />}
+    </div>
+  );
+}
+
+function InlineRatingMeta({ review, color = "#ff8000", heartColor = "#ff4d5a", size = 28, gap = 12 }) {
+  if (!hasRating(review.rating) && !isLiked(review)) return null;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap }}>
+      {hasRating(review.rating) && (
+        <span style={{ color, fontSize: size }}>{window.starString(review.rating)}</span>
+      )}
+      {isLiked(review) && <HeartMark color={heartColor} size={size * 0.9} />}
+    </span>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 // Shared frame
 // ─────────────────────────────────────────────────────────────
@@ -378,9 +415,9 @@ function ShortPosterHero({ review }) {
             {review.title}
             <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
           </h1>
-          {hasRating(review.rating) && (
+          {(hasRating(review.rating) || isLiked(review)) && (
             <div style={{ marginTop: 16 }}>
-              <StarRow rating={review.rating} color={review.accent} size={56} />
+              <RatingHeartRow review={review} color={review.accent} size={56} />
             </div>
           )}
         </div>
@@ -474,9 +511,9 @@ function ShortTicketStub({ review }) {
                 {review.title}
               </h1>
               <div style={{ fontSize: 26, opacity: 0.65, marginTop: 8, fontStyle: "italic" }}>{review.year}</div>
-              {hasRating(review.rating) && (
+              {(hasRating(review.rating) || isLiked(review)) && (
                 <div style={{ marginTop: 20 }}>
-                  <StarRow rating={review.rating} color="#c8441a" size={46} />
+                  <RatingHeartRow review={review} color="#c8441a" size={46} />
                 </div>
               )}
             </div>
@@ -552,7 +589,7 @@ function ShortFullBleed({ review }) {
             color: textSub, marginBottom: 16, fontWeight: 500,
           }}>
             <span>{review.year}</span>
-            <StarRow rating={review.rating} color={stars} size={30} />
+            <RatingHeartRow review={review} color={stars} size={30} gap={10} />
           </div>
           <h1 style={{
             fontSize: 140, fontWeight: 900, letterSpacing: -4,
@@ -592,6 +629,7 @@ function ShortFullBleed({ review }) {
 function LongEditorial({ review }) {
   const fit = useFitFont({
     text: review.review, minSize: 18, maxSize: 36, step: 1,
+    heightSlack: 48,
     deps: [review.id],
   });
 
@@ -703,9 +741,7 @@ function LongEditorial({ review }) {
               gap: 24, fontSize: 28,
             }}>
               <span style={{ opacity: 0.6, fontStyle: "italic" }}>{review.year}</span>
-              {hasRating(review.rating) && (
-                <span style={{ color: review.accent, fontSize: 38 }}>{window.starString(review.rating)}</span>
-              )}
+              <InlineRatingMeta review={review} color={review.accent} size={38} />
             </div>
           </div>
           <img src={review.poster} style={{
@@ -799,9 +835,9 @@ function LongCinematic({ review }) {
             }}>
               {review.title}
             </h1>
-            {hasRating(review.rating) && (
+            {(hasRating(review.rating) || isLiked(review)) && (
               <div style={{ marginTop: 12 }}>
-                <StarRow rating={review.rating} color={review.accent} size={34} />
+                <RatingHeartRow review={review} color={review.accent} size={34} />
               </div>
             )}
           </div>
@@ -888,8 +924,8 @@ function LongMinimal({ review }) {
               marginTop: 8, fontSize: 22, opacity: 0.55, letterSpacing: 0.5,
             }}>
               {review.year}
-              {hasRating(review.rating) && (
-                <> · <span style={{ color: review.accent, fontWeight: 600 }}>{window.starString(review.rating)}</span></>
+              {(hasRating(review.rating) || isLiked(review)) && (
+                <> · <InlineRatingMeta review={review} color={review.accent} size={22} gap={8} /></>
               )}
             </div>
           </div>
@@ -992,9 +1028,9 @@ function LongVerticalSplit({ review }) {
         </h1>
 
         {/* Stars */}
-        {hasRating(review.rating) && (
+        {(hasRating(review.rating) || isLiked(review)) && (
           <div style={{ marginTop: 14 }}>
-            <StarRow rating={review.rating} color={stars} size={34} />
+            <RatingHeartRow review={review} color={stars} size={34} />
           </div>
         )}
 
@@ -1036,6 +1072,7 @@ function LongVerticalSplit({ review }) {
 function LongEditorialDark({ review }) {
   const fit = useFitFont({
     text: review.review, minSize: 18, maxSize: 36, step: 1,
+    heightSlack: 48,
     deps: [review.id],
   });
 
@@ -1126,9 +1163,7 @@ function LongEditorialDark({ review }) {
               gap: 24, fontSize: 28,
             }}>
               <span style={{ opacity: 0.5, fontStyle: "italic" }}>{review.year}</span>
-              {hasRating(review.rating) && (
-                <span style={{ color: "#c8a050", fontSize: 38 }}>{window.starString(review.rating)}</span>
-              )}
+              <InlineRatingMeta review={review} color="#c8a050" size={38} />
             </div>
           </div>
           <img src={review.poster} style={{
@@ -1241,7 +1276,7 @@ function LongScreenplay({ review }) {
             marginTop: 12, display: "flex", alignItems: "center",
             justifyContent: "flex-end", gap: 16,
           }}>
-            <StarRow rating={review.rating} color="#c8441a" size={28} />
+            <RatingHeartRow review={review} color="#c8441a" size={28} gap={10} />
             <span style={{
               fontSize: 18, letterSpacing: 3, textTransform: "uppercase",
               opacity: 0.45,
