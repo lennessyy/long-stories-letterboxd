@@ -378,6 +378,20 @@ function InlineRatingMeta({ review, color = "#ff8000", heartColor = "#ff4d5a", s
   );
 }
 
+function OriginalTitle({ review, size = 28, style = {} }) {
+  if (!review.originalTitle) return null;
+  return (
+    <div style={{
+      marginTop: 10, fontSize: size, lineHeight: 1.2, fontWeight: 400,
+      fontFamily: "'Source Serif Pro', Georgia, serif",
+      fontStyle: /[^\u0000-\u024f]/u.test(review.originalTitle) ? "normal" : "italic",
+      opacity: 0.72, overflowWrap: "anywhere", ...style,
+    }}>
+      {review.originalTitle}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 // Shared frame
 // ─────────────────────────────────────────────────────────────
@@ -455,6 +469,7 @@ function ShortPosterHero({ review }) {
             {review.title}
             <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
           </h1>
+          <OriginalTitle review={review} size={32} />
           {(hasRating(review.rating) || isLiked(review)) && (
             <div style={{ marginTop: 16 }}>
               <RatingHeartRow review={review} color={review.accent} size={56} />
@@ -550,6 +565,7 @@ function ShortTicketStub({ review }) {
               }}>
                 {review.title}
               </h1>
+              <OriginalTitle review={review} size={27} />
               <div style={{ fontSize: 26, opacity: 0.65, marginTop: 8, fontStyle: "italic" }}>{review.year}</div>
               {(hasRating(review.rating) || isLiked(review)) && (
                 <div style={{ marginTop: 20 }}>
@@ -638,6 +654,7 @@ function ShortFullBleed({ review }) {
           }}>
             {review.title}
           </h1>
+          <OriginalTitle review={review} size={36} style={{ color: textColor }} />
         </div>
 
         <div style={{
@@ -770,6 +787,7 @@ function LongEditorial({ review }) {
             }}>
               {review.title}
             </h1>
+            <OriginalTitle review={review} size={28} />
             {/* Hidden probe used to measure wrapped title height at each font-size. */}
             <h1 ref={titleProbeRef} aria-hidden="true" style={{
               position: "absolute", visibility: "hidden", pointerEvents: "none",
@@ -895,6 +913,7 @@ function LongCinematic({ review }) {
             }}>
               {review.title}
             </h1>
+            <OriginalTitle review={review} size={28} />
             {(hasRating(review.rating) || isLiked(review)) && (
               <div style={{ marginTop: 12 }}>
                 <RatingHeartRow review={review} color={review.accent} size={34} />
@@ -980,6 +999,7 @@ function LongMinimal({ review }) {
             }}>
               {review.title}
             </h1>
+            <OriginalTitle review={review} size={25} />
             <div style={{
               marginTop: 8, fontSize: 22, opacity: 0.55, letterSpacing: 0.5,
             }}>
@@ -1086,6 +1106,7 @@ function LongVerticalSplit({ review }) {
         }}>
           {review.title}
         </h1>
+        <OriginalTitle review={review} size={27} />
 
         {/* Stars */}
         {(hasRating(review.rating) || isLiked(review)) && (
@@ -1213,6 +1234,7 @@ function LongEditorialDark({ review }) {
             }}>
               {review.title}
             </h1>
+            <OriginalTitle review={review} size={28} />
             <h1 ref={titleProbeRef} aria-hidden="true" style={{
               position: "absolute", visibility: "hidden", pointerEvents: "none",
               top: 0, left: 0, margin: 0, padding: 0,
@@ -1352,6 +1374,7 @@ function LongScreenplay({ review }) {
           }}>
             {review.title}
           </h1>
+          <OriginalTitle review={review} size={29} />
           <div style={{
             marginTop: 12, display: "flex", alignItems: "center",
             justifyContent: "flex-end", gap: 16,

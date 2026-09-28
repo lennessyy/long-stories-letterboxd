@@ -88,6 +88,7 @@ function adapt(r) {
   return {
     id: r.movie_title + r.year,
     title: r.movie_title,
+    originalTitle: r.original_title || null,
     year: r.year,
     rating: Number(r.rating) || 0,
     liked: r.liked === true || r.liked === "true" || r.liked === "Yes",

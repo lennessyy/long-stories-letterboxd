@@ -31,15 +31,25 @@ def parse_review_url(url: str):
     return path[0], path[2]
 
 
-def fetch_backdrop(film_slug: str) -> str | None:
-    """Grab the og:image from the public film page."""
+def fetch_film_metadata(film_slug: str) -> dict:
+    """Get the backdrop and original-language title from the public film page."""
     try:
-        html = requests.get(f"https://letterboxd.com/film/{film_slug}/", headers=UA, timeout=8).text
-        soup = BeautifulSoup(html, "html.parser")
-        og = soup.find("meta", property="og:image")
-        return og["content"] if og and og.get("content") else None
+        resp = requests.get(f"https://letterboxd.com/film/{film_slug}/", headers=UA, timeout=8)
+        resp.raise_for_status()
+        return parse_film_metadata(BeautifulSoup(resp.text, "html.parser"))
     except Exception:
-        return None
+        return {"backdrop_url": None, "original_title": None}
+
+
+def parse_film_metadata(soup: BeautifulSoup) -> dict:
+    og = soup.find("meta", property="og:image")
+    original = soup.select_one("h2.originalname")
+    original_title = original.get_text(" ", strip=True) if original else None
+    language = (original.get("lang") or "").lower() if original else ""
+    return {
+        "backdrop_url": og["content"] if og and og.get("content") else None,
+        "original_title": original_title if language and not language.startswith("en") else None,
+    }
 
 
 def parse_letterboxd_bool(value) -> bool:
@@ -101,8 +111,8 @@ def scrape_from_rss(user: str, film_slug: str) -> dict | None:
         "rating": rating,
         "liked": parse_letterboxd_bool(entry.get("letterboxd_memberlike") or entry.get("lb_memberlike")),
         "review_text": review_text,
-        "backdrop_url": fetch_backdrop(film_slug),
         "reviewer_handle": user,
+        **fetch_film_metadata(film_slug),
     }
 
 
@@ -163,8 +173,8 @@ def scrape_from_page(url: str, user: str, film_slug: str) -> dict:
         "rating": rating,
         "liked": scrape_liked_from_page(soup),
         "review_text": review_text,
-        "backdrop_url": fetch_backdrop(film_slug),
         "reviewer_handle": user,
+        **fetch_film_metadata(film_slug),
     }
 
 
@@ -186,6 +196,9 @@ def scrape_letterboxd(url: str) -> dict:
     if not result.get("review_text"):
         raise RuntimeError("Could not find review text — the review may not exist or the page structure changed")
 
+    if (result.get("original_title") or "").casefold() == result["movie_title"].casefold():
+        result["original_title"] = None
+
     result["source_url"] = url
     return result
 
@@ -193,6 +206,7 @@ def scrape_letterboxd(url: str) -> dict:
 SAMPLES = {
     "__sample_long__": {
         "movie_title": "Her Story",
+        "original_title": "好东西",
         "year": "2024",
         "rating": 5.0,
         "liked": True,
@@ -224,6 +238,7 @@ SAMPLES = {
     },
     "__sample_short__": {
         "movie_title": "Gladiator II",
+        "original_title": None,
         "year": "2024",
         "rating": 2.0,
         "liked": False,
