@@ -378,13 +378,43 @@ function InlineRatingMeta({ review, color = "#ff8000", heartColor = "#ff4d5a", s
   );
 }
 
-function OriginalTitle({ review, size = 28, style = {} }) {
+function originalTitleFontsFor(lang) {
+  const tag = (lang || "").toLowerCase();
+  if (tag.startsWith("zh")) {
+    const traditional = /(?:^|[-_])(tw|hk|mo|hant)(?:$|[-_])/.test(tag);
+    const region = traditional ? "TC" : "SC";
+    return {
+      serif: `Noto Serif ${region}`,
+      sans: `Noto Sans ${region}`,
+      serifFallback: traditional ? "'Songti TC', 'PMingLiU'" : "'Songti SC', 'STSong'",
+      sansFallback: traditional ? "'PingFang TC'" : "'PingFang SC'",
+    };
+  }
+  if (tag.startsWith("ja")) return {
+    serif: "Noto Serif JP", sans: "Noto Sans JP",
+    serifFallback: "'Hiragino Mincho ProN', 'Yu Mincho'",
+    sansFallback: "'Hiragino Kaku Gothic ProN', 'Yu Gothic'",
+  };
+  if (tag.startsWith("ko")) return {
+    serif: "Noto Serif KR", sans: "Noto Sans KR",
+    serifFallback: "'AppleMyungjo', 'Nanum Myeongjo'",
+    sansFallback: "'Apple SD Gothic Neo', 'Malgun Gothic'",
+  };
+  return null;
+}
+window.originalTitleFontsFor = originalTitleFontsFor;
+
+function OriginalTitle({ review, size = 28, kind = "serif", style = {} }) {
   if (!review.originalTitle) return null;
+  const fonts = originalTitleFontsFor(review.originalTitleLang);
+  const fontFamily = fonts
+    ? `'${fonts[kind]}', ${fonts[`${kind}Fallback`]}, ${kind}`
+    : kind === "serif" ? "'Source Serif Pro', 'DM Serif Text', Georgia, serif" : "'Inter', system-ui, sans-serif";
   return (
-    <div style={{
+    <div lang={review.originalTitleLang || undefined} style={{
       marginTop: 10, fontSize: size, lineHeight: 1.2, fontWeight: 400,
-      fontFamily: "'Source Serif Pro', Georgia, serif",
-      fontStyle: /[^\u0000-\u024f]/u.test(review.originalTitle) ? "normal" : "italic",
+      fontFamily,
+      fontStyle: fonts || kind === "sans" ? "normal" : "italic",
       opacity: 0.72, overflowWrap: "anywhere", ...style,
     }}>
       {review.originalTitle}
@@ -469,7 +499,7 @@ function ShortPosterHero({ review }) {
             {review.title}
             <span style={{ fontWeight: 300, opacity: 0.7 }}>, {review.year}</span>
           </h1>
-          <OriginalTitle review={review} size={32} />
+          <OriginalTitle review={review} size={32} kind="sans" />
           {(hasRating(review.rating) || isLiked(review)) && (
             <div style={{ marginTop: 16 }}>
               <RatingHeartRow review={review} color={review.accent} size={56} />
@@ -654,7 +684,7 @@ function ShortFullBleed({ review }) {
           }}>
             {review.title}
           </h1>
-          <OriginalTitle review={review} size={36} style={{ color: textColor }} />
+          <OriginalTitle review={review} size={36} kind="sans" style={{ color: textColor }} />
         </div>
 
         <div style={{
@@ -913,7 +943,7 @@ function LongCinematic({ review }) {
             }}>
               {review.title}
             </h1>
-            <OriginalTitle review={review} size={28} />
+            <OriginalTitle review={review} size={28} kind="sans" />
             {(hasRating(review.rating) || isLiked(review)) && (
               <div style={{ marginTop: 12 }}>
                 <RatingHeartRow review={review} color={review.accent} size={34} />
@@ -999,7 +1029,7 @@ function LongMinimal({ review }) {
             }}>
               {review.title}
             </h1>
-            <OriginalTitle review={review} size={25} />
+            <OriginalTitle review={review} size={25} kind="sans" />
             <div style={{
               marginTop: 8, fontSize: 22, opacity: 0.55, letterSpacing: 0.5,
             }}>
@@ -1106,7 +1136,7 @@ function LongVerticalSplit({ review }) {
         }}>
           {review.title}
         </h1>
-        <OriginalTitle review={review} size={27} />
+        <OriginalTitle review={review} size={27} kind="sans" />
 
         {/* Stars */}
         {(hasRating(review.rating) || isLiked(review)) && (

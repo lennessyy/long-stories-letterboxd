@@ -89,6 +89,7 @@ function adapt(r) {
     id: r.movie_title + r.year,
     title: r.movie_title,
     originalTitle: r.original_title || null,
+    originalTitleLang: r.original_title_lang || null,
     year: r.year,
     rating: Number(r.rating) || 0,
     liked: r.liked === true || r.liked === "true" || r.liked === "Yes",
@@ -98,6 +99,55 @@ function adapt(r) {
     accent: "#ff8000",
     reviewer: r.reviewer_handle,
   };
+}
+
+async function loadOriginalTitleFonts(review) {
+  document.getElementById("original-title-fonts")?.remove();
+  const fonts = window.originalTitleFontsFor(review.originalTitleLang);
+  if (!review.originalTitle || !fonts) return;
+
+  // Subset both faces to this film's title so CJK fonts stay small in exports.
+  const url = new URL("https://fonts.googleapis.com/css2");
+  url.searchParams.append("family", fonts.sans);
+  url.searchParams.append("family", fonts.serif);
+  url.searchParams.set("text", review.originalTitle);
+  url.searchParams.set("display", "swap");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
+  try {
+    const stylesheet = await fetch(url, { signal: controller.signal });
+    if (!stylesheet.ok) throw new Error(`Font stylesheet returned ${stylesheet.status}`);
+    let css = await stylesheet.text();
+    const fontUrls = [...new Set([...css.matchAll(/url\((['"]?)(https?:\/\/[^'"\)]+)\1\)/g)].map(match => match[2]))];
+    const embedded = await Promise.all(fontUrls.map(async fontUrl => {
+      const response = await fetch(fontUrl, { signal: controller.signal });
+      if (!response.ok) throw new Error(`Font file returned ${response.status}`);
+      const blob = await response.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      return [fontUrl, dataUrl];
+    }));
+    for (const [fontUrl, dataUrl] of embedded) css = css.replaceAll(fontUrl, dataUrl);
+    const style = document.createElement("style");
+    style.id = "original-title-fonts";
+    style.textContent = css;
+    document.head.appendChild(style);
+    if (document.fonts?.load) {
+      await Promise.all([
+        document.fonts.load(`400 28px "${fonts.serif}"`, review.originalTitle),
+        document.fonts.load(`400 28px "${fonts.sans}"`, review.originalTitle),
+      ]);
+    }
+  } catch (error) {
+    console.warn("Original title font load failed; using system fonts", error);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function Landing({ onGenerate, loading, error }) {
@@ -309,7 +359,9 @@ function App() {
       });
       if (!resp.ok) throw new Error((await resp.json()).error || "Failed");
       const data = await resp.json();
-      setReview(adapt(data));
+      const nextReview = adapt(data);
+      await loadOriginalTitleFonts(nextReview);
+      setReview(nextReview);
     } catch (e) { setError(e.message); }
     setLoading(false);
   }

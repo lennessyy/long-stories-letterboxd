@@ -38,7 +38,7 @@ def fetch_film_metadata(film_slug: str) -> dict:
         resp.raise_for_status()
         return parse_film_metadata(BeautifulSoup(resp.text, "html.parser"))
     except Exception:
-        return {"backdrop_url": None, "original_title": None}
+        return {"backdrop_url": None, "original_title": None, "original_title_lang": None}
 
 
 def parse_film_metadata(soup: BeautifulSoup) -> dict:
@@ -49,6 +49,7 @@ def parse_film_metadata(soup: BeautifulSoup) -> dict:
     return {
         "backdrop_url": og["content"] if og and og.get("content") else None,
         "original_title": original_title if language and not language.startswith("en") else None,
+        "original_title_lang": language if original_title and language and not language.startswith("en") else None,
     }
 
 
@@ -198,6 +199,7 @@ def scrape_letterboxd(url: str) -> dict:
 
     if (result.get("original_title") or "").casefold() == result["movie_title"].casefold():
         result["original_title"] = None
+        result["original_title_lang"] = None
 
     result["source_url"] = url
     return result
@@ -207,6 +209,7 @@ SAMPLES = {
     "__sample_long__": {
         "movie_title": "Her Story",
         "original_title": "好东西",
+        "original_title_lang": "zh",
         "year": "2024",
         "rating": 5.0,
         "liked": True,
@@ -239,6 +242,7 @@ SAMPLES = {
     "__sample_short__": {
         "movie_title": "Gladiator II",
         "original_title": None,
+        "original_title_lang": None,
         "year": "2024",
         "rating": 2.0,
         "liked": False,
